@@ -27,6 +27,7 @@ import {
   IconInfoCircle,
   IconMail,
   IconMapPin,
+  IconMinus,
   IconMoodSmile,
   IconPlus,
   IconRefresh,
@@ -117,6 +118,9 @@ export function PersonProfile() {
   });
   const [isCreateProfessionalMode, setIsCreateProfessionalMode] =
     useState(false);
+  const [expandedDetails, setExpandedDetails] = useState<Set<string>>(
+    new Set()
+  );
 
   // Mock data - replace with actual API call
   const personData: PersonData = {
@@ -556,6 +560,18 @@ export function PersonProfile() {
     setIsCreateProfessionalMode(false);
   };
 
+  const toggleDetailExpansion = (detailId: string) => {
+    setExpandedDetails((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(detailId)) {
+        newSet.delete(detailId);
+      } else {
+        newSet.add(detailId);
+      }
+      return newSet;
+    });
+  };
+
   const renderProfessionalDetails = () => (
     <Card
       shadow="sm"
@@ -609,78 +625,101 @@ export function PersonProfile() {
               <Table.Th>Company/Institution</Table.Th>
               <Table.Th>Start Date</Table.Th>
               <Table.Th>End Date</Table.Th>
-              <Table.Th>Description</Table.Th>
               <Table.Th>Modified By</Table.Th>
               <Table.Th>Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
             {personData.professionalDetails.map((detail) => (
-              <Table.Tr key={detail.id}>
-                <Table.Td>
-                  <Badge color="blue" variant="light">
-                    {detail.type}
-                  </Badge>
-                </Table.Td>
-                <Table.Td>
-                  <Text fw={500}>{detail.title}</Text>
-                </Table.Td>
-                <Table.Td>{detail.company}</Table.Td>
-                <Table.Td>
-                  {new Date(detail.startDate).toLocaleDateString()}
-                </Table.Td>
-                <Table.Td>
-                  {detail.endDate === 'Present' ? (
-                    <Badge color="green" variant="light">
-                      Present
+              <>
+                <Table.Tr key={detail.id}>
+                  <Table.Td>
+                    <Badge color="blue" variant="light">
+                      {detail.type}
                     </Badge>
-                  ) : (
-                    new Date(detail.endDate).toLocaleDateString()
-                  )}
-                </Table.Td>
-                <Table.Td>
-                  <Text size="sm" c="dimmed">
-                    {detail.description}
-                  </Text>
-                </Table.Td>
-                <Table.Td>
-                  <Text size="sm" c="dimmed">
-                    {detail.modifiedBy}
-                  </Text>
-                </Table.Td>
-                <Table.Td>
-                  <Menu position="bottom-end" shadow="md">
-                    <Menu.Target>
-                      <ActionIcon variant="subtle" color="gray">
-                        <IconDotsVertical size="1rem" />
-                      </ActionIcon>
-                    </Menu.Target>
-                    <Menu.Dropdown>
-                      <Menu.Item
-                        leftSection={<IconEdit size="1rem" color="blue" />}
-                        onClick={() => handleEditProfessionalDetail(detail)}
-                      >
-                        Edit
-                      </Menu.Item>
-                      <Menu.Item
-                        leftSection={<IconTrash size="1rem" color="red" />}
-                        onClick={() => console.log('Delete', detail.id)}
-                        color="red"
-                      >
-                        Delete
-                      </Menu.Item>
-                      <Menu.Item
-                        leftSection={
-                          <IconInfoCircle size="1rem" color="gray" />
+                  </Table.Td>
+                  <Table.Td>
+                    <Text fw={500}>{detail.title}</Text>
+                  </Table.Td>
+                  <Table.Td>{detail.company}</Table.Td>
+                  <Table.Td>
+                    {new Date(detail.startDate).toLocaleDateString()}
+                  </Table.Td>
+                  <Table.Td>
+                    {detail.endDate === 'Present' ? (
+                      <Badge color="green" variant="light">
+                        Present
+                      </Badge>
+                    ) : (
+                      new Date(detail.endDate).toLocaleDateString()
+                    )}
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="sm" c="dimmed">
+                      {detail.modifiedBy}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Group gap="xs">
+                      <ActionIcon
+                        variant="subtle"
+                        color="blue"
+                        onClick={() => toggleDetailExpansion(detail.id)}
+                        aria-label={
+                          expandedDetails.has(detail.id)
+                            ? 'Collapse description'
+                            : 'Expand description'
                         }
-                        onClick={() => console.log('Info', detail.id)}
                       >
-                        Info
-                      </Menu.Item>
-                    </Menu.Dropdown>
-                  </Menu>
-                </Table.Td>
-              </Table.Tr>
+                        {expandedDetails.has(detail.id) ? (
+                          <IconMinus size="1rem" />
+                        ) : (
+                          <IconPlus size="1rem" />
+                        )}
+                      </ActionIcon>
+                      <Menu position="bottom-end" shadow="md">
+                        <Menu.Target>
+                          <ActionIcon variant="subtle" color="gray">
+                            <IconDotsVertical size="1rem" />
+                          </ActionIcon>
+                        </Menu.Target>
+                        <Menu.Dropdown>
+                          <Menu.Item
+                            leftSection={<IconEdit size="1rem" color="blue" />}
+                            onClick={() => handleEditProfessionalDetail(detail)}
+                          >
+                            Edit
+                          </Menu.Item>
+                          <Menu.Item
+                            leftSection={<IconTrash size="1rem" color="red" />}
+                            onClick={() => console.log('Delete', detail.id)}
+                            color="red"
+                          >
+                            Delete
+                          </Menu.Item>
+                          <Menu.Item
+                            leftSection={
+                              <IconInfoCircle size="1rem" color="gray" />
+                            }
+                            onClick={() => console.log('Info', detail.id)}
+                          >
+                            Info
+                          </Menu.Item>
+                        </Menu.Dropdown>
+                      </Menu>
+                    </Group>
+                  </Table.Td>
+                </Table.Tr>
+                {expandedDetails.has(detail.id) && (
+                  <Table.Tr key={`${detail.id}-description`}>
+                    <Table.Td colSpan={7}>
+                      <Box p="sm" bg="gray.0">
+                        <Text size="sm">{detail.description}</Text>
+                      </Box>
+                    </Table.Td>
+                  </Table.Tr>
+                )}
+              </>
             ))}
           </Table.Tbody>
         </Table>

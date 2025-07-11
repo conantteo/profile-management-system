@@ -98,67 +98,6 @@ export function LeftNavigation() {
             <IconSearch size={24} />
           </UnstyledButton>
 
-          {/* Admin Dashboard Menu */}
-          <Menu
-            opened={opened}
-            onClose={() => setOpened(false)}
-            position="right-start"
-            offset={8}
-            withArrow
-            shadow="md"
-          >
-            <Menu.Target>
-              <UnstyledButton
-                onMouseEnter={() => setOpened(true)}
-                onMouseLeave={() => setOpened(false)}
-                style={{
-                  width: 48,
-                  height: 48,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: isAdminRoute
-                    ? 'var(--mantine-color-blue-1)'
-                    : 'transparent',
-                  color: isAdminRoute
-                    ? 'var(--mantine-color-blue-7)'
-                    : 'var(--mantine-color-gray-7)',
-                  transition: 'all 0.2s ease',
-                  outline: 'none',
-                  '&:hover': {
-                    backgroundColor: 'var(--mantine-color-blue-1)',
-                    color: 'var(--mantine-color-blue-7)',
-                  },
-                }}
-                onClick={() => navigate('/admin')}
-              >
-                <IconLayoutDashboard size={24} />
-              </UnstyledButton>
-            </Menu.Target>
-
-            <Menu.Dropdown
-              onMouseEnter={() => setOpened(true)}
-              onMouseLeave={() => setOpened(false)}
-            >
-              <Menu.Label>Admin Dashboard</Menu.Label>
-              {adminSubMenuItems.map((item) => (
-                <Menu.Item
-                  key={item.path}
-                  leftSection={<item.icon size={16} />}
-                  onClick={() => navigate(item.path)}
-                  style={{
-                    backgroundColor:
-                      location.pathname === item.path
-                        ? 'var(--mantine-color-blue-1)'
-                        : 'transparent',
-                  }}
-                >
-                  {item.label}
-                </Menu.Item>
-              ))}
-            </Menu.Dropdown>
-          </Menu>
-
           {/* Forms Menu */}
           <Menu
             opened={formsOpened}
@@ -223,6 +162,67 @@ export function LeftNavigation() {
                     </Menu.Item>
                   ))}
                 </div>
+              ))}
+            </Menu.Dropdown>
+          </Menu>
+
+          {/* Admin Dashboard Menu */}
+          <Menu
+            opened={opened}
+            onClose={() => setOpened(false)}
+            position="right-start"
+            offset={8}
+            withArrow
+            shadow="md"
+          >
+            <Menu.Target>
+              <UnstyledButton
+                onMouseEnter={() => setOpened(true)}
+                onMouseLeave={() => setOpened(false)}
+                style={{
+                  width: 48,
+                  height: 48,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: isAdminRoute
+                    ? 'var(--mantine-color-blue-1)'
+                    : 'transparent',
+                  color: isAdminRoute
+                    ? 'var(--mantine-color-blue-7)'
+                    : 'var(--mantine-color-gray-7)',
+                  transition: 'all 0.2s ease',
+                  outline: 'none',
+                  '&:hover': {
+                    backgroundColor: 'var(--mantine-color-blue-1)',
+                    color: 'var(--mantine-color-blue-7)',
+                  },
+                }}
+                onClick={() => navigate('/admin')}
+              >
+                <IconLayoutDashboard size={24} />
+              </UnstyledButton>
+            </Menu.Target>
+
+            <Menu.Dropdown
+              onMouseEnter={() => setOpened(true)}
+              onMouseLeave={() => setOpened(false)}
+            >
+              <Menu.Label>Admin Dashboard</Menu.Label>
+              {adminSubMenuItems.map((item) => (
+                <Menu.Item
+                  key={item.path}
+                  leftSection={<item.icon size={16} />}
+                  onClick={() => navigate(item.path)}
+                  style={{
+                    backgroundColor:
+                      location.pathname === item.path
+                        ? 'var(--mantine-color-blue-1)'
+                        : 'transparent',
+                  }}
+                >
+                  {item.label}
+                </Menu.Item>
               ))}
             </Menu.Dropdown>
           </Menu>
