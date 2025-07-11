@@ -1,23 +1,37 @@
 import {
+  ActionIcon,
   Avatar,
   Badge,
   Box,
+  Button,
   Card,
   Container,
   Group,
+  Menu,
+  Modal,
   NavLink,
+  Select,
   SimpleGrid,
   Stack,
+  Table,
   Text,
+  TextInput,
+  Textarea,
   Title,
 } from '@mantine/core';
 import {
   IconBriefcase,
+  IconDotsVertical,
+  IconEdit,
   IconHome,
+  IconInfoCircle,
   IconMail,
   IconMapPin,
   IconMoodSmile,
+  IconPlus,
+  IconRefresh,
   IconTool,
+  IconTrash,
   IconUser,
 } from '@tabler/icons-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -35,16 +49,17 @@ interface PersonData {
   joinDate: string;
   skills: string[];
   bio: string;
-  professionalDetails: {
-    experience: string;
-    education: string;
-    certifications: string[];
-    previousRoles: Array<{
-      title: string;
-      company: string;
-      duration: string;
-    }>;
-  };
+  professionalDetails: Array<{
+    id: string;
+    type: string;
+    title: string;
+    company: string;
+    startDate: string;
+    endDate: string;
+    description: string;
+    modifiedBy: string;
+    modifiedAt: string;
+  }>;
   address: {
     street: string;
     city: string;
@@ -52,13 +67,19 @@ interface PersonData {
     zipCode: string;
     country: string;
   };
-  funFacts: string[];
+  funFacts: Array<{
+    id: string;
+    text: string;
+    modifiedBy: string;
+    modifiedAt: string;
+  }>;
   personalBio: {
-    hobbies: string[];
-    interests: string[];
-    favoriteQuote: string;
-    personalityTraits: string[];
-  };
+    name: string;
+    alias: string;
+    gender: string;
+    country: string;
+    address: string;
+  } | null;
 }
 
 export function PersonProfile() {
@@ -69,6 +90,33 @@ export function PersonProfile() {
   );
   const sectionRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const isScrollingToSection = useRef(false);
+  const [personalBioError, setPersonalBioError] = useState(true); // Initially show error state
+  const [isRefetching, setIsRefetching] = useState(false);
+  const [personalBioData, setPersonalBioData] =
+    useState<PersonData['personalBio']>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingFact, setEditingFact] = useState<
+    PersonData['funFacts'][0] | null
+  >(null);
+  const [editText, setEditText] = useState('');
+  const [isCreateMode, setIsCreateMode] = useState(false);
+
+  // Professional details state
+  const [professionalDetailModalOpen, setProfessionalDetailModalOpen] =
+    useState(false);
+  const [editingProfessionalDetail, setEditingProfessionalDetail] = useState<
+    PersonData['professionalDetails'][0] | null
+  >(null);
+  const [professionalDetailForm, setProfessionalDetailForm] = useState({
+    type: '',
+    title: '',
+    company: '',
+    startDate: '',
+    endDate: '',
+    description: '',
+  });
+  const [isCreateProfessionalMode, setIsCreateProfessionalMode] =
+    useState(false);
 
   // Mock data - replace with actual API call
   const personData: PersonData = {
@@ -92,27 +140,54 @@ export function PersonProfile() {
       'MongoDB',
     ],
     bio: 'Experienced software engineer with a passion for building scalable web applications and mentoring junior developers.',
-    professionalDetails: {
-      experience: '8+ years in software development',
-      education: 'M.S. Computer Science, Stanford University',
-      certifications: [
-        'AWS Certified Solutions Architect',
-        'Google Cloud Professional',
-        'Scrum Master Certified',
-      ],
-      previousRoles: [
-        {
-          title: 'Software Engineer',
-          company: 'StartupXYZ',
-          duration: '2018-2020',
-        },
-        {
-          title: 'Junior Developer',
-          company: 'WebDev Inc',
-          duration: '2016-2018',
-        },
-      ],
-    },
+    professionalDetails: [
+      {
+        id: '1',
+        type: 'Work Experience',
+        title: 'Senior Software Engineer',
+        company: 'Tech Corp',
+        startDate: '2020-01-15',
+        endDate: 'Present',
+        description:
+          'Lead development of scalable web applications and mentor junior developers.',
+        modifiedBy: 'HR Manager',
+        modifiedAt: '2024-01-15T10:30:00Z',
+      },
+      {
+        id: '2',
+        type: 'Work Experience',
+        title: 'Software Engineer',
+        company: 'StartupXYZ',
+        startDate: '2018-03-01',
+        endDate: '2019-12-31',
+        description:
+          'Developed full-stack applications using React and Node.js.',
+        modifiedBy: 'Admin',
+        modifiedAt: '2024-01-10T14:20:00Z',
+      },
+      {
+        id: '3',
+        type: 'Education',
+        title: 'M.S. Computer Science',
+        company: 'Stanford University',
+        startDate: '2014-09-01',
+        endDate: '2016-06-30',
+        description: 'Specialized in distributed systems and machine learning.',
+        modifiedBy: 'Admin',
+        modifiedAt: '2024-01-08T09:15:00Z',
+      },
+      {
+        id: '4',
+        type: 'Certification',
+        title: 'AWS Certified Solutions Architect',
+        company: 'Amazon Web Services',
+        startDate: '2021-05-15',
+        endDate: '2024-05-15',
+        description: 'Professional level certification for cloud architecture.',
+        modifiedBy: 'John Doe',
+        modifiedAt: '2024-01-05T16:45:00Z',
+      },
+    ],
     address: {
       street: '123 Tech Street, Apt 4B',
       city: 'San Francisco',
@@ -121,73 +196,148 @@ export function PersonProfile() {
       country: 'United States',
     },
     funFacts: [
-      'Has visited 25 countries',
-      'Speaks 4 languages fluently',
-      'Once debugged code while skydiving',
-      'Maintains a popular tech blog with 50k+ followers',
-      "Can solve a Rubik's cube in under 2 minutes",
-      'Built his first computer at age 12',
-      'Has a collection of 200+ vintage programming books',
-      'Once gave a TED talk about sustainable coding practices',
-      'Volunteers as a coding instructor for underprivileged youth',
-      'Has contributed to over 50 open-source projects',
+      {
+        id: '1',
+        text: 'Has visited 25 countries',
+        modifiedBy: 'Admin',
+        modifiedAt: '2024-01-15T10:30:00Z',
+      },
+      {
+        id: '2',
+        text: 'Speaks 4 languages fluently',
+        modifiedBy: 'HR Manager',
+        modifiedAt: '2024-01-10T14:20:00Z',
+      },
+      {
+        id: '3',
+        text: 'Once debugged code while skydiving',
+        modifiedBy: 'John Doe',
+        modifiedAt: '2024-01-08T09:15:00Z',
+      },
+      {
+        id: '4',
+        text: 'Maintains a popular tech blog with 50k+ followers',
+        modifiedBy: 'Marketing Team',
+        modifiedAt: '2024-01-05T16:45:00Z',
+      },
+      {
+        id: '5',
+        text: "Can solve a Rubik's cube in under 2 minutes",
+        modifiedBy: 'John Doe',
+        modifiedAt: '2024-01-03T11:00:00Z',
+      },
+      {
+        id: '6',
+        text: 'Built his first computer at age 12',
+        modifiedBy: 'Admin',
+        modifiedAt: '2024-01-01T08:30:00Z',
+      },
+      {
+        id: '7',
+        text: 'Has visited 25 countries',
+        modifiedBy: 'Admin',
+        modifiedAt: '2024-01-15T10:30:00Z',
+      },
+      {
+        id: '8',
+        text: 'Speaks 4 languages fluently',
+        modifiedBy: 'HR Manager',
+        modifiedAt: '2024-01-10T14:20:00Z',
+      },
+      {
+        id: '9',
+        text: 'Once debugged code while skydiving',
+        modifiedBy: 'John Doe',
+        modifiedAt: '2024-01-08T09:15:00Z',
+      },
+      {
+        id: '10',
+        text: 'Maintains a popular tech blog with 50k+ followers',
+        modifiedBy: 'Marketing Team',
+        modifiedAt: '2024-01-05T16:45:00Z',
+      },
+      {
+        id: '11',
+        text: "Can solve a Rubik's cube in under 2 minutes",
+        modifiedBy: 'John Doe',
+        modifiedAt: '2024-01-03T11:00:00Z',
+      },
+      {
+        id: '12',
+        text: 'Built his first computer at age 12',
+        modifiedBy: 'Admin',
+        modifiedAt: '2024-01-01T08:30:00Z',
+      },
+      {
+        id: '13',
+        text: 'Has visited 25 countries',
+        modifiedBy: 'Admin',
+        modifiedAt: '2024-01-15T10:30:00Z',
+      },
+      {
+        id: '14',
+        text: 'Speaks 4 languages fluently',
+        modifiedBy: 'HR Manager',
+        modifiedAt: '2024-01-10T14:20:00Z',
+      },
+      {
+        id: '15',
+        text: 'Once debugged code while skydiving',
+        modifiedBy: 'John Doe',
+        modifiedAt: '2024-01-08T09:15:00Z',
+      },
+      {
+        id: '16',
+        text: 'Maintains a popular tech blog with 50k+ followers',
+        modifiedBy: 'Marketing Team',
+        modifiedAt: '2024-01-05T16:45:00Z',
+      },
+      {
+        id: '17',
+        text: "Can solve a Rubik's cube in under 2 minutes",
+        modifiedBy: 'John Doe',
+        modifiedAt: '2024-01-03T11:00:00Z',
+      },
+      {
+        id: '18',
+        text: 'Built his first computer at age 12',
+        modifiedBy: 'Admin',
+        modifiedAt: '2024-01-01T08:30:00Z',
+      },
     ],
-    personalBio: {
-      hobbies: [
-        'Photography',
-        'Rock Climbing',
-        'Cooking',
-        'Gaming',
-        'Woodworking',
-        'Astronomy',
-      ],
-      interests: [
-        'Artificial Intelligence',
-        'Sustainable Technology',
-        'Space Exploration',
-        'Quantum Computing',
-        'Renewable Energy',
-      ],
-      favoriteQuote:
-        'The best way to predict the future is to invent it. - Alan Kay',
-      personalityTraits: [
-        'Analytical',
-        'Creative',
-        'Team Player',
-        'Problem Solver',
-        'Mentor',
-        'Innovative',
-      ],
-    },
+    personalBio: personalBioData, // Use state data
   };
 
-  const sections = useMemo(() => [
-    {
-      id: 'professional-details',
-      label: 'Professional Details',
-      icon: IconBriefcase,
-    },
-    {
-      id: 'skills',
-      label: 'Skills',
-      icon: IconTool,
-    },
-    {
-      id: 'address',
-      label: 'Address',
-      icon: IconHome,
-    },
-    {
-      id: 'fun-facts',
-      label: 'Fun Facts',
-      icon: IconMoodSmile,
-    },
-    {
-      id: 'personal-bio',
-      label: 'Personal Bio',
-      icon: IconUser,
-    },
-  ], []);
+  const sections = useMemo(
+    () => [
+      {
+        id: 'professional-details',
+        label: 'Professional Details',
+        icon: IconBriefcase,
+      },
+      {
+        id: 'skills',
+        label: 'Skills',
+        icon: IconTool,
+      },
+      {
+        id: 'address',
+        label: 'Address',
+        icon: IconHome,
+      },
+      {
+        id: 'fun-facts',
+        label: 'Fun Facts',
+        icon: IconMoodSmile,
+      },
+      {
+        id: 'personal-bio',
+        label: 'Personal Bio',
+        icon: IconUser,
+      },
+    ],
+    []
+  );
 
   useEffect(() => {
     const section = searchParams.get('section');
@@ -264,6 +414,148 @@ export function PersonProfile() {
     }
   };
 
+  const handleRefetchPersonalBio = async () => {
+    setIsRefetching(true);
+    setPersonalBioError(false);
+
+    try {
+      // Simulate API call delay
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // For demo purposes, randomly succeed or fail
+      const shouldFail = Math.random() > 0.3;
+      if (shouldFail) {
+        throw new Error('Failed to fetch personal bio data');
+      }
+
+      // Simulate successful data fetch
+      setPersonalBioData({
+        name: 'John Doe',
+        alias: 'JD',
+        gender: 'Male',
+        country: 'United States',
+        address: '123 Tech Street, Apt 4B, San Francisco, CA 94105',
+      });
+
+      setPersonalBioError(false);
+    } catch (error) {
+      console.error(error);
+      setPersonalBioError(true);
+    } finally {
+      setIsRefetching(false);
+    }
+  };
+
+  const handleEditFact = (fact: PersonData['funFacts'][0]) => {
+    setEditingFact(fact);
+    setEditText(fact.text);
+    setIsCreateMode(false);
+    setEditModalOpen(true);
+  };
+
+  const handleCreateFact = () => {
+    setEditingFact(null);
+    setEditText('');
+    setIsCreateMode(true);
+    setEditModalOpen(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (isCreateMode) {
+      // In a real app, you would make an API call here to create a new fact
+      console.log(`Creating new fact: "${editText}"`);
+
+      // For demo purposes, just log the action
+      // You would add the new fact to the data here
+    } else if (editingFact) {
+      // In a real app, you would make an API call here to update the fact
+      console.log(`Saving edit for fact ${editingFact.id}: "${editText}"`);
+
+      // For demo purposes, just log the action
+      // You would update the actual data here
+    }
+
+    setEditModalOpen(false);
+    setEditingFact(null);
+    setEditText('');
+    setIsCreateMode(false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditModalOpen(false);
+    setEditingFact(null);
+    setEditText('');
+    setIsCreateMode(false);
+  };
+
+  // Professional details handlers
+  const handleEditProfessionalDetail = (
+    detail: PersonData['professionalDetails'][0]
+  ) => {
+    setEditingProfessionalDetail(detail);
+    setProfessionalDetailForm({
+      type: detail.type,
+      title: detail.title,
+      company: detail.company,
+      startDate: detail.startDate,
+      endDate: detail.endDate,
+      description: detail.description,
+    });
+    setIsCreateProfessionalMode(false);
+    setProfessionalDetailModalOpen(true);
+  };
+
+  const handleCreateProfessionalDetail = () => {
+    setEditingProfessionalDetail(null);
+    setProfessionalDetailForm({
+      type: '',
+      title: '',
+      company: '',
+      startDate: '',
+      endDate: '',
+      description: '',
+    });
+    setIsCreateProfessionalMode(true);
+    setProfessionalDetailModalOpen(true);
+  };
+
+  const handleSaveProfessionalDetail = () => {
+    if (isCreateProfessionalMode) {
+      console.log('Creating new professional detail:', professionalDetailForm);
+    } else if (editingProfessionalDetail) {
+      console.log(
+        `Saving edit for professional detail ${editingProfessionalDetail.id}:`,
+        professionalDetailForm
+      );
+    }
+
+    setProfessionalDetailModalOpen(false);
+    setEditingProfessionalDetail(null);
+    setProfessionalDetailForm({
+      type: '',
+      title: '',
+      company: '',
+      startDate: '',
+      endDate: '',
+      description: '',
+    });
+    setIsCreateProfessionalMode(false);
+  };
+
+  const handleCancelProfessionalDetail = () => {
+    setProfessionalDetailModalOpen(false);
+    setEditingProfessionalDetail(null);
+    setProfessionalDetailForm({
+      type: '',
+      title: '',
+      company: '',
+      startDate: '',
+      endDate: '',
+      description: '',
+    });
+    setIsCreateProfessionalMode(false);
+  };
+
   const renderProfessionalDetails = () => (
     <Card
       shadow="sm"
@@ -277,7 +569,17 @@ export function PersonProfile() {
       mb="xl"
     >
       <Stack gap="md">
-        <Title order={3}>Professional Details</Title>
+        <Group justify="space-between">
+          <Title order={3}>Professional Details</Title>
+          <Button
+            leftSection={<IconPlus size="1rem" />}
+            variant="outline"
+            size="sm"
+            onClick={handleCreateProfessionalDetail}
+          >
+            Add Professional Detail
+          </Button>
+        </Group>
 
         <Group gap="xs">
           <Text fw={500}>Current Position:</Text>
@@ -299,40 +601,89 @@ export function PersonProfile() {
           <Text>{personData.joinDate}</Text>
         </Group>
 
-        <Group gap="xs">
-          <Text fw={500}>Experience:</Text>
-          <Text>{personData.professionalDetails.experience}</Text>
-        </Group>
-
-        <Group gap="xs">
-          <Text fw={500}>Education:</Text>
-          <Text>{personData.professionalDetails.education}</Text>
-        </Group>
-
-        <Stack gap="xs">
-          <Text fw={500}>Certifications:</Text>
-          <Stack gap="xs" ml="md">
-            {personData.professionalDetails.certifications.map(
-              (cert, index) => (
-                <Text key={index}>• {cert}</Text>
-              )
-            )}
-          </Stack>
-        </Stack>
-
-        <Stack gap="xs">
-          <Text fw={500}>Previous Roles:</Text>
-          <Stack gap="md" ml="md">
-            {personData.professionalDetails.previousRoles.map((role, index) => (
-              <Box key={index}>
-                <Text fw={500}>{role.title}</Text>
-                <Text c="dimmed">
-                  {role.company} • {role.duration}
-                </Text>
-              </Box>
+        <Table striped highlightOnHover>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Type</Table.Th>
+              <Table.Th>Title</Table.Th>
+              <Table.Th>Company/Institution</Table.Th>
+              <Table.Th>Start Date</Table.Th>
+              <Table.Th>End Date</Table.Th>
+              <Table.Th>Description</Table.Th>
+              <Table.Th>Modified By</Table.Th>
+              <Table.Th>Actions</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {personData.professionalDetails.map((detail) => (
+              <Table.Tr key={detail.id}>
+                <Table.Td>
+                  <Badge color="blue" variant="light">
+                    {detail.type}
+                  </Badge>
+                </Table.Td>
+                <Table.Td>
+                  <Text fw={500}>{detail.title}</Text>
+                </Table.Td>
+                <Table.Td>{detail.company}</Table.Td>
+                <Table.Td>
+                  {new Date(detail.startDate).toLocaleDateString()}
+                </Table.Td>
+                <Table.Td>
+                  {detail.endDate === 'Present' ? (
+                    <Badge color="green" variant="light">
+                      Present
+                    </Badge>
+                  ) : (
+                    new Date(detail.endDate).toLocaleDateString()
+                  )}
+                </Table.Td>
+                <Table.Td>
+                  <Text size="sm" c="dimmed">
+                    {detail.description}
+                  </Text>
+                </Table.Td>
+                <Table.Td>
+                  <Text size="sm" c="dimmed">
+                    {detail.modifiedBy}
+                  </Text>
+                </Table.Td>
+                <Table.Td>
+                  <Menu position="bottom-end" shadow="md">
+                    <Menu.Target>
+                      <ActionIcon variant="subtle" color="gray">
+                        <IconDotsVertical size="1rem" />
+                      </ActionIcon>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      <Menu.Item
+                        leftSection={<IconEdit size="1rem" color="blue" />}
+                        onClick={() => handleEditProfessionalDetail(detail)}
+                      >
+                        Edit
+                      </Menu.Item>
+                      <Menu.Item
+                        leftSection={<IconTrash size="1rem" color="red" />}
+                        onClick={() => console.log('Delete', detail.id)}
+                        color="red"
+                      >
+                        Delete
+                      </Menu.Item>
+                      <Menu.Item
+                        leftSection={
+                          <IconInfoCircle size="1rem" color="gray" />
+                        }
+                        onClick={() => console.log('Info', detail.id)}
+                      >
+                        Info
+                      </Menu.Item>
+                    </Menu.Dropdown>
+                  </Menu>
+                </Table.Td>
+              </Table.Tr>
             ))}
-          </Stack>
-        </Stack>
+          </Table.Tbody>
+        </Table>
       </Stack>
     </Card>
   );
@@ -442,21 +793,78 @@ export function PersonProfile() {
       mb="xl"
     >
       <Stack gap="md">
-        <Title order={3}>Fun Facts</Title>
+        <Group justify="space-between" align="center">
+          <Title order={3}>Fun Facts</Title>
+          <Button
+            leftSection={<IconPlus size={16} />}
+            onClick={handleCreateFact}
+            size="sm"
+            variant="light"
+          >
+            Add Fun Fact
+          </Button>
+        </Group>
         <Text c="dimmed" mb="md">
           Interesting tidbits and achievements that showcase personality and
           diverse interests beyond professional work.
         </Text>
-        <Stack gap="sm">
+
+        <SimpleGrid cols={2} spacing="md">
           {personData.funFacts.map((fact, index) => (
-            <Group key={index} gap="xs" align="flex-start">
-              <Text c="blue" fw={500}>
-                {index + 1}.
-              </Text>
-              <Text>{fact}</Text>
-            </Group>
+            <Card key={fact.id} shadow="xs" padding="md" radius="md" withBorder>
+              <Stack gap="sm">
+                <Group justify="space-between" align="flex-start">
+                  <Text c="blue" fw={500} size="sm">
+                    #{index + 1}
+                  </Text>
+                  <Menu position="bottom-end" shadow="md" withinPortal>
+                    <Menu.Target>
+                      <ActionIcon
+                        variant="subtle"
+                        color="gray"
+                        size="sm"
+                        radius="xl"
+                      >
+                        <IconDotsVertical size={14} />
+                      </ActionIcon>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      <Menu.Item
+                        leftSection={<IconInfoCircle size={14} color="gray" />}
+                        onClick={() => {}}
+                      >
+                        {`Modified by ${fact.modifiedBy} on ${new Date(fact.modifiedAt).toLocaleDateString()}`}
+                      </Menu.Item>
+                      <Menu.Item
+                        leftSection={<IconEdit size={14} color="blue" />}
+                        onClick={() => handleEditFact(fact)}
+                      >
+                        Edit
+                      </Menu.Item>
+                      <Menu.Item
+                        leftSection={<IconTrash size={14} color="red" />}
+                        onClick={() => console.log(`Delete fact ${fact.id}`)}
+                        color="red"
+                      >
+                        Delete
+                      </Menu.Item>
+                    </Menu.Dropdown>
+                  </Menu>
+                </Group>
+
+                <Text size="sm" lineClamp={3}>
+                  {fact.text}
+                </Text>
+
+                <Text size="xs" c="dimmed">
+                  Modified by {fact.modifiedBy} •{' '}
+                  {new Date(fact.modifiedAt).toLocaleDateString()}
+                </Text>
+              </Stack>
+            </Card>
           ))}
-        </Stack>
+        </SimpleGrid>
+
         <Text mt="md" size="sm" c="dimmed">
           Life is about more than just code - these experiences shape
           perspective and creativity in problem-solving.
@@ -480,54 +888,55 @@ export function PersonProfile() {
       <Stack gap="md">
         <Title order={3}>Personal Bio</Title>
         <Text c="dimmed" mb="md">
-          Personal interests, values, and characteristics that define who I am
-          outside of work.
+          Personal information and biographical details.
         </Text>
 
-        <Stack gap="xs">
-          <Text fw={500}>Hobbies:</Text>
-          <Group gap="xs" ml="md">
-            {personData.personalBio.hobbies.map((hobby) => (
-              <Badge key={hobby} variant="light" color="green">
-                {hobby}
-              </Badge>
-            ))}
-          </Group>
-        </Stack>
+        {personalBioError || !personData.personalBio ? (
+          <Stack gap="md" align="center" py="xl">
+            <Text size="lg" fw={500} c="red">
+              Failed to fetch Personal Bio data
+            </Text>
+            <Button
+              variant="outline"
+              leftSection={<IconRefresh size={16} />}
+              onClick={handleRefetchPersonalBio}
+              loading={isRefetching}
+            >
+              Retry
+            </Button>
+          </Stack>
+        ) : (
+          <SimpleGrid cols={2} spacing="lg">
+            <Stack gap="md">
+              <Group gap="xs">
+                <Text fw={500}>Name:</Text>
+                <Text>{personData.personalBio.name}</Text>
+              </Group>
 
-        <Stack gap="xs">
-          <Text fw={500}>Interests:</Text>
-          <Group gap="xs" ml="md">
-            {personData.personalBio.interests.map((interest) => (
-              <Badge key={interest} variant="light" color="purple">
-                {interest}
-              </Badge>
-            ))}
-          </Group>
-        </Stack>
+              <Group gap="xs">
+                <Text fw={500}>Alias:</Text>
+                <Text>{personData.personalBio.alias}</Text>
+              </Group>
 
-        <Stack gap="xs">
-          <Text fw={500}>Personality Traits:</Text>
-          <Group gap="xs" ml="md">
-            {personData.personalBio.personalityTraits.map((trait) => (
-              <Badge key={trait} variant="light" color="orange">
-                {trait}
-              </Badge>
-            ))}
-          </Group>
-        </Stack>
+              <Group gap="xs">
+                <Text fw={500}>Gender:</Text>
+                <Text>{personData.personalBio.gender}</Text>
+              </Group>
+            </Stack>
 
-        <Stack gap="xs">
-          <Text fw={500}>Favorite Quote:</Text>
-          <Text ml="md" fs="italic" c="dimmed" size="lg">
-            "{personData.personalBio.favoriteQuote}"
-          </Text>
-        </Stack>
+            <Stack gap="md">
+              <Group gap="xs">
+                <Text fw={500}>Country:</Text>
+                <Text>{personData.personalBio.country}</Text>
+              </Group>
 
-        <Text mt="md" size="sm" c="dimmed">
-          Believing in continuous growth, meaningful connections, and making a
-          positive impact through technology.
-        </Text>
+              <Stack gap="xs">
+                <Text fw={500}>Address:</Text>
+                <Text>{personData.personalBio.address}</Text>
+              </Stack>
+            </Stack>
+          </SimpleGrid>
+        )}
       </Stack>
     </Card>
   );
@@ -610,6 +1019,179 @@ export function PersonProfile() {
           </Box>
         </SimpleGrid>
       </Stack>
+
+      {/* Edit/Create Fun Fact Modal */}
+      <Modal
+        opened={editModalOpen}
+        onClose={handleCancelEdit}
+        title={isCreateMode ? 'Create Fun Fact' : 'Edit Fun Fact'}
+        centered
+        size="md"
+      >
+        <Stack gap="md">
+          <TextInput
+            label="Fun Fact"
+            placeholder="Enter fun fact..."
+            value={editText}
+            onChange={(e) => setEditText(e.target.value)}
+            data-autofocus
+          />
+
+          {editingFact && !isCreateMode && (
+            <Stack gap="xs">
+              <Text size="sm" c="dimmed">
+                <strong>Last modified:</strong>{' '}
+                {new Date(editingFact.modifiedAt).toLocaleDateString()}
+              </Text>
+              <Text size="sm" c="dimmed">
+                <strong>Modified by:</strong> {editingFact.modifiedBy}
+              </Text>
+            </Stack>
+          )}
+
+          <Group justify="flex-end" gap="sm">
+            <Button variant="outline" onClick={handleCancelEdit}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={!editText.trim()}>
+              {isCreateMode ? 'Create' : 'Save Changes'}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      {/* Edit/Create Professional Detail Modal */}
+      <Modal
+        opened={professionalDetailModalOpen}
+        onClose={handleCancelProfessionalDetail}
+        title={
+          isCreateProfessionalMode
+            ? 'Create Professional Detail'
+            : 'Edit Professional Detail'
+        }
+        centered
+        size="lg"
+      >
+        <Stack gap="md">
+          <Select
+            label="Type"
+            placeholder="Select type..."
+            value={professionalDetailForm.type}
+            onChange={(value) =>
+              setProfessionalDetailForm((prev) => ({
+                ...prev,
+                type: value || '',
+              }))
+            }
+            data={[
+              { value: 'Work Experience', label: 'Work Experience' },
+              { value: 'Education', label: 'Education' },
+              { value: 'Certification', label: 'Certification' },
+              { value: 'Training', label: 'Training' },
+              { value: 'Volunteer Work', label: 'Volunteer Work' },
+            ]}
+            required
+          />
+
+          <TextInput
+            label="Title"
+            placeholder="Enter title..."
+            value={professionalDetailForm.title}
+            onChange={(e) =>
+              setProfessionalDetailForm((prev) => ({
+                ...prev,
+                title: e.target.value,
+              }))
+            }
+            required
+          />
+
+          <TextInput
+            label="Company/Institution"
+            placeholder="Enter company or institution..."
+            value={professionalDetailForm.company}
+            onChange={(e) =>
+              setProfessionalDetailForm((prev) => ({
+                ...prev,
+                company: e.target.value,
+              }))
+            }
+            required
+          />
+
+          <Group grow>
+            <TextInput
+              label="Start Date"
+              placeholder="YYYY-MM-DD"
+              value={professionalDetailForm.startDate}
+              onChange={(e) =>
+                setProfessionalDetailForm((prev) => ({
+                  ...prev,
+                  startDate: e.target.value,
+                }))
+              }
+              required
+            />
+            <TextInput
+              label="End Date"
+              placeholder="YYYY-MM-DD or 'Present'"
+              value={professionalDetailForm.endDate}
+              onChange={(e) =>
+                setProfessionalDetailForm((prev) => ({
+                  ...prev,
+                  endDate: e.target.value,
+                }))
+              }
+              required
+            />
+          </Group>
+
+          <Textarea
+            label="Description"
+            placeholder="Enter description..."
+            value={professionalDetailForm.description}
+            onChange={(e) =>
+              setProfessionalDetailForm((prev) => ({
+                ...prev,
+                description: e.target.value,
+              }))
+            }
+            rows={4}
+            required
+          />
+
+          {editingProfessionalDetail && !isCreateProfessionalMode && (
+            <Stack gap="xs">
+              <Text size="sm" c="dimmed">
+                <strong>Last modified:</strong>{' '}
+                {new Date(
+                  editingProfessionalDetail.modifiedAt
+                ).toLocaleDateString()}
+              </Text>
+              <Text size="sm" c="dimmed">
+                <strong>Modified by:</strong>{' '}
+                {editingProfessionalDetail.modifiedBy}
+              </Text>
+            </Stack>
+          )}
+
+          <Group justify="flex-end" gap="sm">
+            <Button variant="outline" onClick={handleCancelProfessionalDetail}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveProfessionalDetail}
+              disabled={
+                !professionalDetailForm.type ||
+                !professionalDetailForm.title ||
+                !professionalDetailForm.company
+              }
+            >
+              {isCreateProfessionalMode ? 'Create' : 'Save Changes'}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Container>
   );
 }
