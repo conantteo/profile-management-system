@@ -1,10 +1,11 @@
 import {
   ActionIcon,
+  Autocomplete,
   Button,
   Group,
   Select,
   Stack,
-  TextInput,
+  Text,
 } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
@@ -21,6 +22,31 @@ interface SearchBarProps {
   showCategories?: boolean;
   centerCategories?: boolean;
 }
+
+interface HighlightedProps {
+  suggestion: string;
+  query: string;
+}
+
+const Highlighted = ({ suggestion, query }: HighlightedProps) => {
+  if (!query) return suggestion;
+  const parts: string[] = suggestion.split(new RegExp(`(${query})`, 'gi'));
+  return (
+    <>
+      {parts.map((part, idx) =>
+        part.toLowerCase() === query.toLowerCase() ? (
+          <Text component="span" fw={700} c="blue" key={idx}>
+            {part}
+          </Text>
+        ) : (
+          <Text component="span" key={idx}>
+            {part}
+          </Text>
+        )
+      )}
+    </>
+  );
+};
 
 export function SearchBar({
   searchQuery,
@@ -42,24 +68,50 @@ export function SearchBar({
     { id: 'abbreviations', label: 'Abbreviations' },
   ];
 
-  // Local input state for debouncing
   const [inputValue, setInputValue] = useState(searchQuery);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
 
   // Sync local input with external searchQuery prop
   useEffect(() => {
     setInputValue(searchQuery);
   }, [searchQuery]);
 
-  // Debounce effect: update the searchQuery after user stops typing
+  // Debounced suggestions update
   useEffect(() => {
     const handler = setTimeout(() => {
       setSearchQuery(inputValue);
+      if (inputValue.trim() !== '') {
+        const results = mockSearch(inputValue, searchField);
+        setSuggestions(results);
+      } else {
+        setSuggestions([]);
+      }
     }, 300);
 
     return () => {
       clearTimeout(handler);
     };
-  }, [inputValue, setSearchQuery]);
+  }, [inputValue, setSearchQuery, searchField]);
+
+  // Mock search function (replace with real API call as needed)
+  function mockSearch(query: string, field: string): string[] {
+    const data = [
+      'Alice Johnson',
+      'Bob Smith',
+      'Charlie Brown',
+      'David Wilson',
+      'Eve Davis',
+      'Frank Miller',
+      'Grace Lee',
+      'Hannah Taylor',
+    ];
+    if (field === 'name' || field === 'all') {
+      return data.filter((item) =>
+        item.toLowerCase().includes(query.toLowerCase())
+      );
+    }
+    return [];
+  }
 
   return (
     <Stack style={{ width: '100%' }}>
@@ -88,15 +140,22 @@ export function SearchBar({
             transitionProps: { transition: 'pop', duration: 200 },
           }}
         />
-        <TextInput
+        <Autocomplete
           value={inputValue}
-          onChange={(event) => setInputValue(event.currentTarget.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') {
-              onSearch();
-            }
-          }}
+          onChange={setInputValue}
+          data={suggestions}
           placeholder={placeholder}
+          maxDropdownHeight={200}
+          comboboxProps={{ withinPortal: true }}
+          limit={5}
+          renderOption={(option) => (
+            <div>
+              <Highlighted
+                suggestion={option.option.value}
+                query={inputValue}
+              />
+            </div>
+          )}
           style={{ flex: 1 }}
           styles={{
             input: {
@@ -105,14 +164,32 @@ export function SearchBar({
               borderBottomLeftRadius: 0,
               borderTopLeftRadius: 0,
             },
+            dropdown: {
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+              borderRadius: 8,
+              zIndex: 9999,
+            },
           }}
           rightSection={
             <Group gap="xs" pr="sm">
-              <ActionIcon variant="subtle" color="gray" onClick={onSearch}>
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                onClick={() => {
+                  onSearch();
+                  setSuggestions([]);
+                }}
+              >
                 <IconSearch size={20} />
               </ActionIcon>
             </Group>
           }
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              onSearch();
+              setSuggestions([]);
+            }
+          }}
         />
       </Group>
 
