@@ -247,14 +247,16 @@ export function MapRequestsView() {
               />
               {/* Add other filter controls here if needed */}
             </Group>
-            <Button
-              variant="subtle"
-              leftSection={<IconX size={16} />}
-              onClick={resetFilters}
-            >
-              Reset All Filters
-            </Button>
-            <Button variant="outline">Export</Button>
+            <Group>
+              <Button
+                variant="subtle"
+                leftSection={<IconX size={16} />}
+                onClick={resetFilters}
+              >
+                Reset All Filters
+              </Button>
+              <Button variant="outline">Export</Button>
+            </Group>
           </Flex>
         </Stack>
       </Card>
