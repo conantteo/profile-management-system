@@ -1,5 +1,5 @@
 import { Box } from '@mantine/core';
-import { LeftNavigation } from '../Navigation/LeftNavigation';
+import { LeftNavigation } from '../Navigation';
 
 interface MainLayoutProps {
   children: React.ReactNode;

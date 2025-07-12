@@ -1,5 +1,6 @@
 import { Box, Menu, Stack, Tooltip, UnstyledButton } from '@mantine/core';
 import {
+  IconChartBar,
   IconClipboardList,
   IconDatabase,
   IconForms,
@@ -20,6 +21,7 @@ export function LeftNavigation() {
   const [opened, setOpened] = useState(false);
   const [formsOpened, setFormsOpened] = useState(false);
   const [requestsOpened, setRequestsOpened] = useState(false);
+  const [statisticsOpened, setStatisticsOpened] = useState(false);
 
   const adminSubMenuItems = [
     { label: 'Dashboard', icon: IconLayoutDashboard, path: '/admin' },
@@ -65,9 +67,21 @@ export function LeftNavigation() {
     },
   ];
 
+  const statisticsSubMenuItems = [
+    {
+      icon: IconMap,
+      subItems: [{ label: 'Person Statistics', path: '/statistics/person' }],
+    },
+    {
+      icon: IconMap,
+      subItems: [{ label: 'Map Statistics', path: '/statistics/map' }],
+    },
+  ];
+
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isFormsRoute = location.pathname.startsWith('/forms');
   const isRequestsRoute = location.pathname.startsWith('/requests');
+  const isStatisticsRoute = location.pathname.startsWith('/statistics');
   const isMainRoute = location.pathname === '/';
 
   return (
@@ -165,7 +179,6 @@ export function LeftNavigation() {
                       key={subItem.path}
                       onClick={() => navigate(subItem.path)}
                       style={{
-                        paddingLeft: '32px',
                         backgroundColor:
                           location.pathname === subItem.path
                             ? 'var(--mantine-color-green-1)'
@@ -233,7 +246,73 @@ export function LeftNavigation() {
                       key={subItem.path}
                       onClick={() => navigate(subItem.path)}
                       style={{
-                        paddingLeft: '32px',
+                        backgroundColor:
+                          location.pathname === subItem.path
+                            ? 'var(--mantine-color-green-1)'
+                            : 'transparent',
+                        marginLeft: 0,
+                        marginRight: 0,
+                        width: '100%',
+                        boxSizing: 'border-box',
+                      }}
+                    >
+                      {subItem.label}
+                    </Menu.Item>
+                  ))}
+                </div>
+              ))}
+            </Menu.Dropdown>
+          </Menu>
+
+          {/* Statistics Menu */}
+          <Menu
+            opened={statisticsOpened}
+            onClose={() => setStatisticsOpened(false)}
+            position="right-start"
+            offset={8}
+            withArrow
+            shadow="md"
+          >
+            <Menu.Target>
+              <UnstyledButton
+                onMouseEnter={() => setStatisticsOpened(true)}
+                onMouseLeave={() => setStatisticsOpened(false)}
+                style={{
+                  width: 48,
+                  height: 48,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: isStatisticsRoute
+                    ? 'var(--mantine-color-green-1)'
+                    : 'transparent',
+                  color: isStatisticsRoute
+                    ? 'var(--mantine-color-green-7)'
+                    : 'var(--mantine-color-gray-7)',
+                  transition: 'all 0.2s ease',
+                  outline: 'none',
+                  '&:hover': {
+                    backgroundColor: 'var(--mantine-color-green-1)',
+                    color: 'var(--mantine-color-green-7)',
+                  },
+                }}
+              >
+                <IconChartBar size={24} />
+              </UnstyledButton>
+            </Menu.Target>
+
+            <Menu.Dropdown
+              onMouseEnter={() => setStatisticsOpened(true)}
+              onMouseLeave={() => setStatisticsOpened(false)}
+            >
+              <Menu.Label>Statistics</Menu.Label>
+              {statisticsSubMenuItems.map((category, idx) => (
+                <div key={idx}>
+                  {category.subItems.map((subItem) => (
+                    <Menu.Item
+                      key={subItem.path}
+                      onClick={() => navigate(subItem.path)}
+                      style={{
                         backgroundColor:
                           location.pathname === subItem.path
                             ? 'var(--mantine-color-green-1)'
