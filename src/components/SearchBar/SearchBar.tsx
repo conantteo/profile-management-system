@@ -7,6 +7,7 @@ import {
   TextInput,
 } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
+import { useEffect, useState } from 'react';
 
 interface SearchBarProps {
   searchQuery: string;
@@ -41,6 +42,25 @@ export function SearchBar({
     { id: 'abbreviations', label: 'Abbreviations' },
   ];
 
+  // Local input state for debouncing
+  const [inputValue, setInputValue] = useState(searchQuery);
+
+  // Sync local input with external searchQuery prop
+  useEffect(() => {
+    setInputValue(searchQuery);
+  }, [searchQuery]);
+
+  // Debounce effect: update the searchQuery after user stops typing
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setSearchQuery(inputValue);
+    }, 300);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [inputValue, setSearchQuery]);
+
   return (
     <Stack style={{ width: '100%' }}>
       <Group gap={0} style={{ width: '100%' }}>
@@ -69,8 +89,8 @@ export function SearchBar({
           }}
         />
         <TextInput
-          value={searchQuery}
-          onChange={(event) => setSearchQuery(event.currentTarget.value)}
+          value={inputValue}
+          onChange={(event) => setInputValue(event.currentTarget.value)}
           onKeyDown={(event) => {
             if (event.key === 'Enter') {
               onSearch();
