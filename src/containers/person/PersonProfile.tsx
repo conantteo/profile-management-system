@@ -685,6 +685,14 @@ export function PersonProfile() {
                         </Menu.Target>
                         <Menu.Dropdown>
                           <Menu.Item
+                            leftSection={
+                              <IconInfoCircle size="1rem" color="gray" />
+                            }
+                            disabled
+                          >
+                            {`Modified by ${detail.modifiedBy} on ${new Date(detail.modifiedAt).toLocaleDateString()}`}
+                          </Menu.Item>
+                          <Menu.Item
                             leftSection={<IconEdit size="1rem" color="blue" />}
                             onClick={() => handleEditProfessionalDetail(detail)}
                           >
@@ -696,14 +704,6 @@ export function PersonProfile() {
                             color="red"
                           >
                             Delete
-                          </Menu.Item>
-                          <Menu.Item
-                            leftSection={
-                              <IconInfoCircle size="1rem" color="gray" />
-                            }
-                            onClick={() => console.log('Info', detail.id)}
-                          >
-                            Info
                           </Menu.Item>
                         </Menu.Dropdown>
                       </Menu>
@@ -870,7 +870,7 @@ export function PersonProfile() {
                     <Menu.Dropdown>
                       <Menu.Item
                         leftSection={<IconInfoCircle size={14} color="gray" />}
-                        onClick={() => {}}
+                        disabled
                       >
                         {`Modified by ${fact.modifiedBy} on ${new Date(fact.modifiedAt).toLocaleDateString()}`}
                       </Menu.Item>
@@ -1006,7 +1006,7 @@ export function PersonProfile() {
         </Card>
 
         {/* Main Content Layout */}
-        <SimpleGrid cols={4} spacing="lg" style={{ alignItems: 'flex-start' }}>
+        <SimpleGrid cols={5} spacing="lg" style={{ alignItems: 'flex-start' }}>
           {/* Left Navigation - Sticky */}
           <Card
             shadow="sm"
@@ -1047,7 +1047,7 @@ export function PersonProfile() {
           </Card>
 
           {/* Main Content - Scrollable */}
-          <Box style={{ gridColumn: 'span 3' }}>
+          <Box style={{ gridColumn: 'span 4' }}>
             <Stack gap={0}>
               {renderProfessionalDetails()}
               {renderSkills()}
