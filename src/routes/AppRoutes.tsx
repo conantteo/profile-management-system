@@ -14,6 +14,9 @@ import { CreateMapForm } from '../containers/forms/map/CreateMapForm';
 import { CreateReportForm } from '../containers/forms/report/CreateReportForm';
 import { MapProfile } from '../containers/map/MapProfile';
 import { PersonProfile } from '../containers/person/PersonProfile';
+import { CountryRequestsView } from '../containers/requests/CountryRequestsView';
+import { MapRequestsView } from '../containers/requests/MapRequestsView';
+import { ReportRequestsView } from '../containers/requests/ReportRequestsView';
 
 export function AppRoutes() {
   return (
@@ -37,6 +40,11 @@ export function AppRoutes() {
         <Route path="/forms/map/create" element={<CreateMapForm />} />
         <Route path="/forms/report/create" element={<CreateReportForm />} />
         <Route path="/forms/countries/create" element={<CreateCountryForm />} />
+
+        {/* Request Routes */}
+        <Route path="/requests/map" element={<MapRequestsView />} />
+        <Route path="/requests/report" element={<ReportRequestsView />} />
+        <Route path="/requests/country" element={<CountryRequestsView />} />
       </Routes>
     </MainLayout>
   );

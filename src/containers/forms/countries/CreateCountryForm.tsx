@@ -78,7 +78,7 @@ export function CreateCountryForm() {
       <Card shadow="sm" padding="lg" radius="md" withBorder mb="xl">
         <Stack gap="md">
           <Group>
-            <IconWorld size={32} color="var(--mantine-color-blue-6)" />
+            <IconWorld size={32} color="var(--mantine-color-green-6)" />
             <Title order={2}>Create New Country</Title>
           </Group>
           <Text c="dimmed">

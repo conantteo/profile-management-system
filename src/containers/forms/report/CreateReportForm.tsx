@@ -74,7 +74,7 @@ export function CreateReportForm() {
       <Card shadow="sm" padding="lg" radius="md" withBorder mb="xl">
         <Stack gap="md">
           <Group>
-            <IconCalendarStats size={32} color="var(--mantine-color-blue-6)" />
+            <IconCalendarStats size={32} color="var(--mantine-color-green-6)" />
             <Title order={2}>Create New Report</Title>
           </Group>
           <Text c="dimmed">

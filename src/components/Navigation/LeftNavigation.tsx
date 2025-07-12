@@ -1,5 +1,6 @@
 import { Box, Menu, Stack, Tooltip, UnstyledButton } from '@mantine/core';
 import {
+  IconClipboardList,
   IconDatabase,
   IconForms,
   IconLayoutDashboard,
@@ -18,6 +19,7 @@ export function LeftNavigation() {
   const location = useLocation();
   const [opened, setOpened] = useState(false);
   const [formsOpened, setFormsOpened] = useState(false);
+  const [requestsOpened, setRequestsOpened] = useState(false);
 
   const adminSubMenuItems = [
     { label: 'Dashboard', icon: IconLayoutDashboard, path: '/admin' },
@@ -48,8 +50,24 @@ export function LeftNavigation() {
     },
   ];
 
+  const requestsSubMenuItems = [
+    {
+      icon: IconMap,
+      subItems: [{ label: 'Map Requests', path: '/requests/map' }],
+    },
+    {
+      icon: IconReport,
+      subItems: [{ label: 'Report Requests', path: '/requests/report' }],
+    },
+    {
+      icon: IconWorld,
+      subItems: [{ label: 'Country Requests', path: '/requests/country' }],
+    },
+  ];
+
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isFormsRoute = location.pathname.startsWith('/forms');
+  const isRequestsRoute = location.pathname.startsWith('/requests');
   const isMainRoute = location.pathname === '/';
 
   return (
@@ -81,16 +99,16 @@ export function LeftNavigation() {
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: isMainRoute
-                ? 'var(--mantine-color-blue-1)'
+                ? 'var(--mantine-color-green-1)'
                 : 'transparent',
               color: isMainRoute
-                ? 'var(--mantine-color-blue-7)'
+                ? 'var(--mantine-color-green-7)'
                 : 'var(--mantine-color-gray-7)',
               transition: 'all 0.2s ease',
               outline: 'none',
               '&:hover': {
-                backgroundColor: 'var(--mantine-color-blue-1)',
-                color: 'var(--mantine-color-blue-7)',
+                backgroundColor: 'var(--mantine-color-green-1)',
+                color: 'var(--mantine-color-green-7)',
               },
             }}
             onClick={() => navigate('/')}
@@ -118,16 +136,16 @@ export function LeftNavigation() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   backgroundColor: isFormsRoute
-                    ? 'var(--mantine-color-blue-1)'
+                    ? 'var(--mantine-color-green-1)'
                     : 'transparent',
                   color: isFormsRoute
-                    ? 'var(--mantine-color-blue-7)'
+                    ? 'var(--mantine-color-green-7)'
                     : 'var(--mantine-color-gray-7)',
                   transition: 'all 0.2s ease',
                   outline: 'none',
                   '&:hover': {
-                    backgroundColor: 'var(--mantine-color-blue-1)',
-                    color: 'var(--mantine-color-blue-7)',
+                    backgroundColor: 'var(--mantine-color-green-1)',
+                    color: 'var(--mantine-color-green-7)',
                   },
                 }}
               >
@@ -150,7 +168,75 @@ export function LeftNavigation() {
                         paddingLeft: '32px',
                         backgroundColor:
                           location.pathname === subItem.path
-                            ? 'var(--mantine-color-blue-1)'
+                            ? 'var(--mantine-color-green-1)'
+                            : 'transparent',
+                        marginLeft: 0,
+                        marginRight: 0,
+                        width: '100%',
+                        boxSizing: 'border-box',
+                      }}
+                    >
+                      {subItem.label}
+                    </Menu.Item>
+                  ))}
+                </div>
+              ))}
+            </Menu.Dropdown>
+          </Menu>
+
+          {/* Requests Menu */}
+          <Menu
+            opened={requestsOpened}
+            onClose={() => setRequestsOpened(false)}
+            position="right-start"
+            offset={8}
+            withArrow
+            shadow="md"
+          >
+            <Menu.Target>
+              <UnstyledButton
+                onMouseEnter={() => setRequestsOpened(true)}
+                onMouseLeave={() => setRequestsOpened(false)}
+                style={{
+                  width: 48,
+                  height: 48,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: isRequestsRoute
+                    ? 'var(--mantine-color-green-1)'
+                    : 'transparent',
+                  color: isRequestsRoute
+                    ? 'var(--mantine-color-green-7)'
+                    : 'var(--mantine-color-gray-7)',
+                  transition: 'all 0.2s ease',
+                  outline: 'none',
+                  '&:hover': {
+                    backgroundColor: 'var(--mantine-color-green-1)',
+                    color: 'var(--mantine-color-green-7)',
+                  },
+                }}
+              >
+                <IconClipboardList size={24} />
+              </UnstyledButton>
+            </Menu.Target>
+
+            <Menu.Dropdown
+              onMouseEnter={() => setRequestsOpened(true)}
+              onMouseLeave={() => setRequestsOpened(false)}
+            >
+              <Menu.Label>Requests</Menu.Label>
+              {requestsSubMenuItems.map((category, idx) => (
+                <div key={idx}>
+                  {category.subItems.map((subItem) => (
+                    <Menu.Item
+                      key={subItem.path}
+                      onClick={() => navigate(subItem.path)}
+                      style={{
+                        paddingLeft: '32px',
+                        backgroundColor:
+                          location.pathname === subItem.path
+                            ? 'var(--mantine-color-green-1)'
                             : 'transparent',
                         marginLeft: 0,
                         marginRight: 0,
@@ -186,16 +272,16 @@ export function LeftNavigation() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   backgroundColor: isAdminRoute
-                    ? 'var(--mantine-color-blue-1)'
+                    ? 'var(--mantine-color-green-1)'
                     : 'transparent',
                   color: isAdminRoute
-                    ? 'var(--mantine-color-blue-7)'
+                    ? 'var(--mantine-color-green-7)'
                     : 'var(--mantine-color-gray-7)',
                   transition: 'all 0.2s ease',
                   outline: 'none',
                   '&:hover': {
-                    backgroundColor: 'var(--mantine-color-blue-1)',
-                    color: 'var(--mantine-color-blue-7)',
+                    backgroundColor: 'var(--mantine-color-green-1)',
+                    color: 'var(--mantine-color-green-7)',
                   },
                 }}
                 onClick={() => navigate('/admin')}
@@ -217,7 +303,7 @@ export function LeftNavigation() {
                   style={{
                     backgroundColor:
                       location.pathname === item.path
-                        ? 'var(--mantine-color-blue-1)'
+                        ? 'var(--mantine-color-green-1)'
                         : 'transparent',
                   }}
                 >

@@ -75,7 +75,7 @@ export function CreateMapForm() {
       <Card shadow="sm" padding="lg" radius="md" withBorder mb="xl">
         <Stack gap="md">
           <Group>
-            <IconMap size={32} color="var(--mantine-color-blue-6)" />
+            <IconMap size={32} color="var(--mantine-color-green-6)" />
             <Title order={2}>Create New Map</Title>
           </Group>
           <Text c="dimmed">
