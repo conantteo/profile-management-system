@@ -1,28 +1,16 @@
-import {
-  Container,
-  Stack,
-  Title,
-} from '@mantine/core';
+import { Button, Container, Group, Stack, Title } from '@mantine/core';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { SearchBar } from '../components/SearchBar';
 
 export function MainPage() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const categories = [
+    { id: 'person', label: 'Person' },
+    { id: 'map', label: 'Map' },
+    { id: 'book', label: 'Book' },
+    { id: 'countries', label: 'Countries' },
+    { id: 'abbreviations', label: 'Abbreviations' },
+  ];
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [searchField, setSearchField] = useState<string>('all');
-  const navigate = useNavigate();
-
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      const searchParams = new URLSearchParams({
-        q: searchQuery,
-        field: searchField,
-        ...(selectedCategory && { category: selectedCategory }),
-      });
-      navigate(`/search?${searchParams.toString()}`);
-    }
-  };
 
   return (
     <Container
@@ -40,15 +28,30 @@ export function MainPage() {
           Profile Management System
         </Title>
 
-        <SearchBar
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
-          searchField={searchField}
-          setSearchField={setSearchField}
-          onSearch={handleSearch}
-        />
+        <SearchBar selectedCategory={selectedCategory} />
+
+        <Group justify="center" gap="xs" mt="lg" wrap="wrap">
+          {categories.map((category) => (
+            <Button
+              key={category.id}
+              variant={selectedCategory === category.id ? 'filled' : 'light'}
+              size="sm"
+              radius="xl"
+              onClick={() =>
+                setSelectedCategory(
+                  selectedCategory === category.id ? null : category.id
+                )
+              }
+              style={{
+                transition: 'all 0.2s ease',
+                minWidth: 'auto',
+                padding: '8px 16px',
+              }}
+            >
+              {category.label}
+            </Button>
+          ))}
+        </Group>
       </Stack>
     </Container>
   );

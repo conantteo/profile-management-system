@@ -1,26 +1,21 @@
 import {
   ActionIcon,
   Autocomplete,
-  Button,
   Group,
   Select,
   Stack,
   Text,
 } from '@mantine/core';
+import { useDebouncedValue } from '@mantine/hooks';
 import { IconSearch } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface SearchBarProps {
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  selectedCategory: string | null;
-  setSelectedCategory: (category: string | null) => void;
-  searchField: string;
-  setSearchField: (field: string) => void;
-  onSearch: () => void;
   placeholder?: string;
-  showCategories?: boolean;
-  centerCategories?: boolean;
+  selectedCategory: string | null;
+  setQuery?: (query: string) => void;
+  query?: string;
 }
 
 interface HighlightedProps {
@@ -49,49 +44,39 @@ const Highlighted = ({ suggestion, query }: HighlightedProps) => {
 };
 
 export function SearchBar({
-  searchQuery,
-  setSearchQuery,
-  selectedCategory,
-  setSelectedCategory,
-  searchField,
-  setSearchField,
-  onSearch,
   placeholder = 'Search profiles, entities, or data...',
-  showCategories = true,
-  centerCategories = true,
+  selectedCategory,
+  query,
+  setQuery,
 }: SearchBarProps) {
-  const categories = [
-    { id: 'person', label: 'Person' },
-    { id: 'map', label: 'Map' },
-    { id: 'book', label: 'Book' },
-    { id: 'countries', label: 'Countries' },
-    { id: 'abbreviations', label: 'Abbreviations' },
-  ];
-
-  const [inputValue, setInputValue] = useState(searchQuery);
+  const [searchQuery, setSearchQuery] = useState(query || '');
+  const [searchField, setSearchField] = useState<string>('all');
+  const navigate = useNavigate();
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [debouncedSearchQuery] = useDebouncedValue(searchQuery, 300);
 
-  // Sync local input with external searchQuery prop
-  useEffect(() => {
-    setInputValue(searchQuery);
-  }, [searchQuery]);
+  const handleSearch = (suggestedSearchQuery?: string) => {
+    const queryToSearch = suggestedSearchQuery || searchQuery;
+    if (queryToSearch.trim()) {
+      if (setQuery) setQuery(queryToSearch);
+      const searchParams = new URLSearchParams({
+        q: queryToSearch,
+        field: searchField,
+        ...(selectedCategory && { category: selectedCategory }),
+      });
+      navigate(`/search?${searchParams.toString()}`);
+    }
+  };
 
   // Debounced suggestions update
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setSearchQuery(inputValue);
-      if (inputValue.trim() !== '') {
-        const results = mockSearch(inputValue, searchField);
-        setSuggestions(results);
-      } else {
-        setSuggestions([]);
-      }
-    }, 300);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [inputValue, setSearchQuery, searchField]);
+    if (debouncedSearchQuery.trim() !== '') {
+      const results = mockSearch(debouncedSearchQuery, searchField);
+      setSuggestions(results);
+    } else {
+      setSuggestions([]);
+    }
+  }, [debouncedSearchQuery, searchField, setQuery]);
 
   // Mock search function (replace with real API call as needed)
   function mockSearch(query: string, field: string): string[] {
@@ -141,8 +126,8 @@ export function SearchBar({
           }}
         />
         <Autocomplete
-          value={inputValue}
-          onChange={setInputValue}
+          value={searchQuery}
+          onChange={setSearchQuery}
           data={suggestions}
           placeholder={placeholder}
           maxDropdownHeight={200}
@@ -152,10 +137,15 @@ export function SearchBar({
             <div>
               <Highlighted
                 suggestion={option.option.value}
-                query={inputValue}
+                query={searchQuery}
               />
             </div>
           )}
+          onOptionSubmit={(value) => {
+            setSearchQuery(value);
+            handleSearch(value);
+            setSuggestions([]);
+          }}
           style={{ flex: 1 }}
           styles={{
             input: {
@@ -176,7 +166,7 @@ export function SearchBar({
                 variant="subtle"
                 color="gray"
                 onClick={() => {
-                  onSearch();
+                  handleSearch();
                   setSuggestions([]);
                 }}
               >
@@ -186,42 +176,12 @@ export function SearchBar({
           }
           onKeyDown={(event) => {
             if (event.key === 'Enter') {
-              onSearch();
+              handleSearch();
               setSuggestions([]);
             }
           }}
         />
       </Group>
-
-      {showCategories && (
-        <Group
-          justify={centerCategories ? 'center' : 'flex-start'}
-          gap="xs"
-          mt="lg"
-          wrap="wrap"
-        >
-          {categories.map((category) => (
-            <Button
-              key={category.id}
-              variant={selectedCategory === category.id ? 'filled' : 'light'}
-              size="sm"
-              radius="xl"
-              onClick={() =>
-                setSelectedCategory(
-                  selectedCategory === category.id ? null : category.id
-                )
-              }
-              style={{
-                transition: 'all 0.2s ease',
-                minWidth: 'auto',
-                padding: '8px 16px',
-              }}
-            >
-              {category.label}
-            </Button>
-          ))}
-        </Group>
-      )}
     </Stack>
   );
 }

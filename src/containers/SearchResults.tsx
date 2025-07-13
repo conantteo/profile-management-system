@@ -24,6 +24,14 @@ interface SearchResult {
   data: any;
 }
 
+const categories = [
+  { id: 'person', label: 'Person' },
+  { id: 'map', label: 'Map' },
+  { id: 'book', label: 'Book' },
+  { id: 'countries', label: 'Countries' },
+  { id: 'abbreviations', label: 'Abbreviations' },
+];
+
 export function SearchResults() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -31,9 +39,6 @@ export function SearchResults() {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(
     searchParams.get('category') || null
-  );
-  const [searchField, setSearchField] = useState<string>(
-    searchParams.get('field') || 'all'
   );
   const [selectedResult, setSelectedResult] = useState<SearchResult | null>(
     null
@@ -100,17 +105,6 @@ export function SearchResults() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, selectedCategory]);
-
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      const newSearchParams = new URLSearchParams({
-        q: searchQuery,
-        field: searchField,
-        ...(selectedCategory && { category: selectedCategory }),
-      });
-      navigate(`/search?${newSearchParams.toString()}`);
-    }
-  };
 
   const handleNavigateToProfile = () => {
     if (!selectedResult) return;
@@ -211,15 +205,34 @@ export function SearchResults() {
           {/* Search bar */}
           <Card shadow="sm" p="md" radius="md" withBorder>
             <SearchBar
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
               selectedCategory={selectedCategory}
-              setSelectedCategory={setSelectedCategory}
-              searchField={searchField}
-              setSearchField={setSearchField}
-              onSearch={handleSearch}
-              centerCategories={false}
+              query={searchQuery}
+              setQuery={setSearchQuery}
             />
+            <Group justify="center" gap="xs" mt="lg" wrap="wrap">
+              {categories.map((category) => (
+                <Button
+                  key={category.id}
+                  variant={
+                    selectedCategory === category.id ? 'filled' : 'light'
+                  }
+                  size="sm"
+                  radius="xl"
+                  onClick={() =>
+                    setSelectedCategory(
+                      selectedCategory === category.id ? null : category.id
+                    )
+                  }
+                  style={{
+                    transition: 'all 0.2s ease',
+                    minWidth: 'auto',
+                    padding: '8px 16px',
+                  }}
+                >
+                  {category.label}
+                </Button>
+              ))}
+            </Group>
           </Card>
 
           {/* Search results */}
