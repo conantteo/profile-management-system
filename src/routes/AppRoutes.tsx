@@ -15,6 +15,7 @@ import { CountryProfile } from '../containers/profile/CountryProfile';
 import { MapProfile } from '../containers/profile/MapProfile';
 import { PersonProfile } from '../containers/profile/PersonProfile';
 import { CountryRequestsView } from '../containers/requests/CountryRequestsView';
+import { MapRequestDetail } from '../containers/requests/MapRequestDetail';
 import { MapRequestsView } from '../containers/requests/MapRequestsView';
 import { ReportRequestsView } from '../containers/requests/ReportRequestsView';
 import { MapStatistics } from '../containers/statistics/MapStatistics';
@@ -45,6 +46,7 @@ export function AppRoutes() {
 
         {/* Request Routes */}
         <Route path="/requests/map" element={<MapRequestsView />} />
+        <Route path="/request/map/:id" element={<MapRequestDetail />} />
         <Route path="/requests/report" element={<ReportRequestsView />} />
         <Route path="/requests/country" element={<CountryRequestsView />} />
 
