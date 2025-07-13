@@ -19,6 +19,7 @@ import {
   Textarea,
   Title,
 } from '@mantine/core';
+import { Link, RichTextEditor } from '@mantine/tiptap';
 import {
   IconBriefcase,
   IconDotsVertical,
@@ -35,6 +36,13 @@ import {
   IconTrash,
   IconUser,
 } from '@tabler/icons-react';
+import Highlight from '@tiptap/extension-highlight';
+import SubScript from '@tiptap/extension-subscript';
+import Superscript from '@tiptap/extension-superscript';
+import TextAlign from '@tiptap/extension-text-align';
+import Underline from '@tiptap/extension-underline';
+import { useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
@@ -163,6 +171,27 @@ export function PersonProfile() {
   });
 
   const [isCreateLinkageMode, setIsCreateLinkageMode] = useState(false);
+
+  // Initialize the editor
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Underline,
+      Link,
+      Superscript,
+      SubScript,
+      Highlight,
+      TextAlign.configure({ types: ['heading', 'paragraph'] }),
+    ],
+    content: '',
+    onUpdate: ({ editor }) => {
+      const html = editor.getHTML();
+      setLinkageForm((prev) => ({
+        ...prev,
+        remarks: html,
+      }));
+    },
+  });
 
   // Mock data - replace with actual API call
   const personData: PersonData = {
@@ -367,7 +396,7 @@ export function PersonProfile() {
         },
         linkageType: 'Colleague',
         remarks:
-          'Worked together on the cloud migration project. Jane provided valuable insights on system architecture.',
+          '<p>Worked together on the <strong>cloud migration project</strong>. Jane provided valuable insights on:</p><ul><li>System architecture</li><li>Database optimization</li><li>Security best practices</li></ul><p><em>Highly recommended for future collaborations.</em></p>',
         createdBy: 'John Doe',
         createdAt: '2024-01-15T10:30:00Z',
         modifiedBy: 'HR Manager',
@@ -387,7 +416,7 @@ export function PersonProfile() {
         },
         linkageType: 'Recommended Reading',
         remarks:
-          'Highly influential book that shaped my coding practices. Referenced frequently in code reviews.',
+          '<p><strong>Highly influential book</strong> that shaped my coding practices.</p><p>Key takeaways:</p><ol><li>Write <em>meaningful</em> variable names</li><li>Keep functions small and focused</li><li>Use consistent formatting</li></ol><p>Referenced frequently in <mark>code reviews</mark> and team discussions.</p>',
         createdBy: 'Tech Lead',
         createdAt: '2024-01-10T09:00:00Z',
         modifiedBy: 'John Doe',
@@ -407,7 +436,7 @@ export function PersonProfile() {
         },
         linkageType: 'Work Location',
         remarks:
-          'Spent 6 months working at our Berlin office. Gained experience with European data privacy regulations.',
+          '<p>Spent <strong>6 months</strong> working at our Berlin office.</p><p>Gained experience with:</p><ul><li>European data privacy regulations (<em>GDPR</em>)</li><li>International team collaboration</li><li>German business culture</li></ul><p>Would love to return for future projects! 🇩🇪</p>',
         createdBy: 'Admin',
         createdAt: '2024-01-05T11:45:00Z',
         modifiedBy: 'Admin',
@@ -698,6 +727,12 @@ export function PersonProfile() {
       linkageType: linkage.linkageType,
       remarks: linkage.remarks,
     });
+
+    // Set the editor content
+    if (editor) {
+      editor.commands.setContent(linkage.remarks);
+    }
+
     setIsCreateLinkageMode(false);
     setLinkageModalOpen(true);
   };
@@ -706,7 +741,7 @@ export function PersonProfile() {
     setEditingLinkage(null);
     setLinkageForm({
       fromProfile: {
-        profileId: personData.id, // Pre-populate with current person's ID
+        profileId: personData.id,
         profileType: 'person',
         profileName: personData.name,
       },
@@ -718,6 +753,12 @@ export function PersonProfile() {
       linkageType: '',
       remarks: '',
     });
+
+    // Clear the editor content
+    if (editor) {
+      editor.commands.setContent('');
+    }
+
     setIsCreateLinkageMode(true);
     setLinkageModalOpen(true);
   };
@@ -739,10 +780,14 @@ export function PersonProfile() {
       linkageType: '',
       remarks: '',
     });
+
+    // Clear the editor content
+    if (editor) {
+      editor.commands.setContent('');
+    }
+
     setIsCreateLinkageMode(false);
   };
-
-  // Linkage handlers
 
   const handleSaveLinkage = () => {
     if (isCreateLinkageMode) {
@@ -1392,14 +1437,18 @@ export function PersonProfile() {
                 </Table.Tr>
                 {expandedDetails.has(linkage.id) && (
                   <Table.Tr key={`${linkage.id}-remarks`}>
-                    <Table.Td colSpan={7}>
+                    <Table.Td colSpan={6}>
                       <Box p="sm" bg="gray.0">
                         <Text size="sm" fw={500} mb="xs">
                           Remarks:
                         </Text>
-                        <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
-                          {linkage.remarks}
-                        </Text>
+                        <Box
+                          style={{
+                            fontSize: '14px',
+                            lineHeight: 1.5,
+                          }}
+                          dangerouslySetInnerHTML={{ __html: linkage.remarks }}
+                        />
                       </Box>
                     </Table.Td>
                   </Table.Tr>
@@ -1671,6 +1720,7 @@ export function PersonProfile() {
       </Modal>
 
       {/* Edit/Create Linkage Modal */}
+      {/* Edit/Create Linkage Modal */}
       <Modal
         opened={linkageModalOpen}
         onClose={handleCancelLinkage}
@@ -1828,19 +1878,67 @@ export function PersonProfile() {
               required
             />
 
-            <Textarea
-              label="Remarks"
-              placeholder="Enter detailed remarks about this linkage..."
-              value={linkageForm.remarks}
-              onChange={(e) =>
-                setLinkageForm((prev) => ({
-                  ...prev,
-                  remarks: e.target.value,
-                }))
-              }
-              rows={6}
-              description="Rich-text field for detailed information about the linkage relationship"
-            />
+            {/* Rich Text Editor for Remarks */}
+            <Stack gap="xs">
+              <Text size="sm" fw={500}>
+                Remarks{' '}
+                <Text component="span" c="red">
+                  *
+                </Text>
+              </Text>
+              <RichTextEditor editor={editor}>
+                <RichTextEditor.Toolbar sticky stickyOffset={60}>
+                  <RichTextEditor.ControlsGroup>
+                    <RichTextEditor.Bold />
+                    <RichTextEditor.Italic />
+                    <RichTextEditor.Underline />
+                    <RichTextEditor.Strikethrough />
+                    <RichTextEditor.ClearFormatting />
+                    <RichTextEditor.Highlight />
+                    <RichTextEditor.Code />
+                  </RichTextEditor.ControlsGroup>
+
+                  <RichTextEditor.ControlsGroup>
+                    <RichTextEditor.H1 />
+                    <RichTextEditor.H2 />
+                    <RichTextEditor.H3 />
+                    <RichTextEditor.H4 />
+                  </RichTextEditor.ControlsGroup>
+
+                  <RichTextEditor.ControlsGroup>
+                    <RichTextEditor.Blockquote />
+                    <RichTextEditor.Hr />
+                    <RichTextEditor.BulletList />
+                    <RichTextEditor.OrderedList />
+                    <RichTextEditor.Subscript />
+                    <RichTextEditor.Superscript />
+                  </RichTextEditor.ControlsGroup>
+
+                  <RichTextEditor.ControlsGroup>
+                    <RichTextEditor.Link />
+                    <RichTextEditor.Unlink />
+                  </RichTextEditor.ControlsGroup>
+
+                  <RichTextEditor.ControlsGroup>
+                    <RichTextEditor.AlignLeft />
+                    <RichTextEditor.AlignCenter />
+                    <RichTextEditor.AlignJustify />
+                    <RichTextEditor.AlignRight />
+                  </RichTextEditor.ControlsGroup>
+
+                  <RichTextEditor.ControlsGroup>
+                    <RichTextEditor.Undo />
+                    <RichTextEditor.Redo />
+                  </RichTextEditor.ControlsGroup>
+                </RichTextEditor.Toolbar>
+
+                <RichTextEditor.Content style={{ minHeight: '200px' }} />
+              </RichTextEditor>
+              <Text size="xs" c="dimmed">
+                Use the rich text editor to format your remarks with bold,
+                italic, lists, links, and more.
+              </Text>
+            </Stack>
           </Stack>
 
           {editingLinkage && !isCreateLinkageMode && (
@@ -1871,7 +1969,8 @@ export function PersonProfile() {
                 !linkageForm.toProfile.profileType ||
                 !linkageForm.toProfile.profileId ||
                 !linkageForm.toProfile.profileName ||
-                !linkageForm.linkageType
+                !linkageForm.linkageType ||
+                !linkageForm.remarks.trim()
               }
             >
               {isCreateLinkageMode ? 'Create' : 'Save Changes'}
