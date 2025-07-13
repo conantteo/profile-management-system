@@ -38,12 +38,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           </Text>
         </Group>
 
-        <Paper
-          p="sm"
-          radius="md"
-          bg={isSystem ? 'blue.0' : 'gray.0'}
-          style={{ maxWidth: '80%' }}
-        >
+        <Paper p="sm" radius="md" bg={isSystem ? 'blue.0' : 'gray.0'}>
           <Text size="sm">{message.message}</Text>
         </Paper>
       </Stack>

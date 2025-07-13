@@ -235,7 +235,15 @@ export function MapRequestDetail() {
       case 'pending':
         return (
           <Group>
-            <Button color="green">Approve</Button>
+            <Button
+              color="green"
+              disabled={
+                checklistItems.filter((item) => item.checked).length !==
+                checklistItems.length
+              }
+            >
+              Approve
+            </Button>
             <Button color="red">Reject</Button>
             <Button variant="outline">Request More Information</Button>
           </Group>
@@ -250,7 +258,7 @@ export function MapRequestDetail() {
       case 'rejected':
         return (
           <Group>
-            <Button color="orange">Reconsider</Button>
+            <Button color="orange">Appeal</Button>
             <Button variant="outline">Archive</Button>
           </Group>
         );
@@ -501,7 +509,7 @@ export function MapRequestDetail() {
               </Tabs.Panel>
 
               <Tabs.Panel value="approval" pt="md">
-                <Stack>
+                <Stack style={{ height: '100vh' }}>
                   <Text>
                     <strong>Status:</strong> Approved
                   </Text>
@@ -511,15 +519,51 @@ export function MapRequestDetail() {
                   <Text>
                     <strong>Approval Date:</strong> 2023-06-25
                   </Text>
-                  <Text>
-                    <strong>Remarks:</strong> Approved after review of
-                    specifications and deadline feasibility.
-                  </Text>
+                  <Title order={4}>Remarks</Title>
+                  {/* Chat History */}
+                  <ScrollArea
+                    style={{ flex: 1 }}
+                    scrollbarSize={6}
+                    scrollHideDelay={1000}
+                  >
+                    <Stack pr="sm">
+                      {chatMessages.map((message: IChatMessage) => (
+                        <ChatMessage key={message.id} message={message} />
+                      ))}
+                    </Stack>
+                  </ScrollArea>
+
+                  {/* Message Input */}
+                  <Paper withBorder p="sm" radius="md">
+                    <Flex gap="sm" align="flex-end">
+                      <Textarea
+                        placeholder="Type your comment or review..."
+                        value={newMessage}
+                        onChange={(
+                          event: React.ChangeEvent<HTMLTextAreaElement>
+                        ) => setNewMessage(event.currentTarget.value)}
+                        onKeyPress={handleKeyPress}
+                        autosize
+                        minRows={1}
+                        maxRows={3}
+                        style={{ flex: 1 }}
+                      />
+                      <ActionIcon
+                        size="lg"
+                        variant="filled"
+                        color="blue"
+                        onClick={handleSendMessage}
+                        disabled={!newMessage.trim()}
+                      >
+                        <IconSend size={16} />
+                      </ActionIcon>
+                    </Flex>
+                  </Paper>
                 </Stack>
               </Tabs.Panel>
 
               <Tabs.Panel value="comments" pt="md">
-                <Stack>
+                <Stack style={{ height: '100vh' }}>
                   {/* Chat History */}
                   <ScrollArea
                     style={{ flex: 1 }}
