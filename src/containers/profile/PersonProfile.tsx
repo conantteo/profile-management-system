@@ -360,7 +360,7 @@ export function PersonProfile() {
         }
       }, 100);
     }
-  }, [searchParams]);
+  }, [searchParams, sections]);
 
   // Intersection Observer to update active section based on scroll position
   useEffect(() => {
@@ -598,22 +598,30 @@ export function PersonProfile() {
         </Group>
 
         <Group gap="xs">
-          <Text fw={500}>Current Position:</Text>
+          <Text fw={500} style={{ minWidth: '60px' }}>
+            Current Position:
+          </Text>
           <Text>{personData.position}</Text>
         </Group>
 
         <Group gap="xs">
-          <Text fw={500}>Company:</Text>
+          <Text fw={500} style={{ minWidth: '60px' }}>
+            Company:
+          </Text>
           <Text>{personData.company}</Text>
         </Group>
 
         <Group gap="xs">
-          <Text fw={500}>Department:</Text>
+          <Text fw={500} style={{ minWidth: '60px' }}>
+            Department:
+          </Text>
           <Text>{personData.department}</Text>
         </Group>
 
         <Group gap="xs">
-          <Text fw={500}>Join Date:</Text>
+          <Text fw={500} style={{ minWidth: '60px' }}>
+            Join Date:
+          </Text>
           <Text>{personData.joinDate}</Text>
         </Group>
 
@@ -639,7 +647,9 @@ export function PersonProfile() {
                     </Badge>
                   </Table.Td>
                   <Table.Td>
-                    <Text fw={500}>{detail.title}</Text>
+                    <Text fw={500} style={{ minWidth: '60px' }}>
+                      {detail.title}
+                    </Text>
                   </Table.Td>
                   <Table.Td>{detail.company}</Table.Td>
                   <Table.Td>
@@ -776,32 +786,44 @@ export function PersonProfile() {
         <Title order={3}>Address & Contact Information</Title>
 
         <Stack gap="xs">
-          <Text fw={500}>Street Address:</Text>
+          <Text fw={500} style={{ minWidth: '60px' }}>
+            Street Address:
+          </Text>
           <Text ml="md">{personData.address.street}</Text>
         </Stack>
 
         <Group gap="xs">
-          <Text fw={500}>City:</Text>
+          <Text fw={500} style={{ minWidth: '60px' }}>
+            City:
+          </Text>
           <Text>{personData.address.city}</Text>
         </Group>
 
         <Group gap="xs">
-          <Text fw={500}>State:</Text>
+          <Text fw={500} style={{ minWidth: '60px' }}>
+            State:
+          </Text>
           <Text>{personData.address.state}</Text>
         </Group>
 
         <Group gap="xs">
-          <Text fw={500}>ZIP Code:</Text>
+          <Text fw={500} style={{ minWidth: '60px' }}>
+            ZIP Code:
+          </Text>
           <Text>{personData.address.zipCode}</Text>
         </Group>
 
         <Group gap="xs">
-          <Text fw={500}>Country:</Text>
+          <Text fw={500} style={{ minWidth: '60px' }}>
+            Country:
+          </Text>
           <Text>{personData.address.country}</Text>
         </Group>
 
         <Stack gap="xs">
-          <Text fw={500}>Contact Information:</Text>
+          <Text fw={500} style={{ minWidth: '60px' }}>
+            Contact Information:
+          </Text>
           <Group gap="xs" ml="md">
             <IconMail size={16} />
             <Text>{personData.email}</Text>
@@ -948,31 +970,41 @@ export function PersonProfile() {
           <SimpleGrid cols={2} spacing="lg">
             <Stack gap="md">
               <Group gap="xs">
-                <Text fw={500}>Name:</Text>
-                <Text>{personData.personalBio.name}</Text>
+                <Text fw={500} style={{ minWidth: '60px' }}>
+                  Name
+                </Text>
+                <Text>: {personData.personalBio.name}</Text>
               </Group>
 
               <Group gap="xs">
-                <Text fw={500}>Alias:</Text>
-                <Text>{personData.personalBio.alias}</Text>
+                <Text fw={500} style={{ minWidth: '60px' }}>
+                  Alias
+                </Text>
+                <Text>: {personData.personalBio.alias}</Text>
               </Group>
 
               <Group gap="xs">
-                <Text fw={500}>Gender:</Text>
-                <Text>{personData.personalBio.gender}</Text>
+                <Text fw={500} style={{ minWidth: '60px' }}>
+                  Gender
+                </Text>
+                <Text>: {personData.personalBio.gender}</Text>
               </Group>
             </Stack>
 
             <Stack gap="md">
               <Group gap="xs">
-                <Text fw={500}>Country:</Text>
-                <Text>{personData.personalBio.country}</Text>
+                <Text fw={500} style={{ minWidth: '60px' }}>
+                  Country
+                </Text>
+                <Text>: {personData.personalBio.country}</Text>
               </Group>
 
-              <Stack gap="xs">
-                <Text fw={500}>Address:</Text>
-                <Text>{personData.personalBio.address}</Text>
-              </Stack>
+              <Group gap="xs">
+                <Text fw={500} style={{ minWidth: '60px' }}>
+                  Address
+                </Text>
+                <Text>: {personData.personalBio.address}</Text>
+              </Group>
             </Stack>
           </SimpleGrid>
         )}
