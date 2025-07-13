@@ -1,26 +1,69 @@
 import {
+  ActionIcon,
   Badge,
   Button,
   Card,
   Checkbox,
   Container,
   Divider,
+  Flex,
   Grid,
   Group,
   List,
   Paper,
+  ScrollArea,
   Stack,
+  Tabs,
   Text,
+  Textarea,
   Title,
 } from '@mantine/core';
 import {
   IconCheck,
   IconClipboardList,
   IconMap,
+  IconSend,
   IconUser,
 } from '@tabler/icons-react';
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { ChatMessage, type IChatMessage } from '../../components/Chat';
+
+// Mock data for map chat messages
+const mockChatMessages: IChatMessage[] = [
+  {
+    id: 1,
+    type: 'user',
+    author: 'John Doe',
+    timestamp: new Date('2023-05-16T10:30:00'),
+    message: 'Please ensure the map includes all disputed territories.',
+    avatar: null, // Will use default human avatar
+  },
+  {
+    id: 2,
+    type: 'system',
+    author: 'System',
+    timestamp: new Date('2023-05-16T10:31:00'),
+    message: 'Request status updated to "Under Review"',
+    avatar: '/path/to/system-avatar.png', // Custom PNG for system messages
+  },
+  {
+    id: 3,
+    type: 'user',
+    author: 'Emily Brown',
+    timestamp: new Date('2023-05-20T14:15:00'),
+    message: 'Deadline might be tight, consider prioritizing this request.',
+    avatar: null,
+  },
+  {
+    id: 4,
+    type: 'user',
+    author: 'Michael Wilson',
+    timestamp: new Date('2023-05-22T09:45:00'),
+    message: 'Technical requirements seem feasible with current resources.',
+    avatar: null,
+  },
+];
 
 // Mock data for map requests with more details
 const mockMapRequests = [
@@ -162,6 +205,9 @@ const initialChecklistItems = [
 export function MapRequestDetail() {
   const { id } = useParams<{ id: string }>();
   const [checklistItems, setChecklistItems] = useState(initialChecklistItems);
+  const [chatMessages, setChatMessages] =
+    useState<IChatMessage[]>(mockChatMessages);
+  const [newMessage, setNewMessage] = useState<string>('');
 
   // Find the request based on the ID from the URL
   const request =
@@ -210,6 +256,31 @@ export function MapRequestDetail() {
         );
       default:
         return null;
+    }
+  };
+
+  const handleSendMessage = (): void => {
+    if (newMessage.trim()) {
+      const message: IChatMessage = {
+        id: chatMessages.length + 1,
+        type: 'user',
+        author: 'Current User', // Replace with actual user name
+        timestamp: new Date(),
+        message: newMessage.trim(),
+        avatar: null,
+      };
+
+      setChatMessages([...chatMessages, message]);
+      setNewMessage('');
+    }
+  };
+
+  const handleKeyPress = (
+    event: React.KeyboardEvent<HTMLTextAreaElement>
+  ): void => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      handleSendMessage();
     }
   };
 
@@ -306,117 +377,191 @@ export function MapRequestDetail() {
         {/* Middle column: Request details */}
         <Grid.Col span={6}>
           <Paper p="md" radius="md">
-            <Stack>
-              <Group>
-                <IconMap size={24} />
-                <Title order={3}>Request Details</Title>
-              </Group>
-              <Divider />
+            <Tabs defaultValue="request">
+              <Tabs.List>
+                <Tabs.Tab value="request">Request Information</Tabs.Tab>
+                <Tabs.Tab value="approval">Approval Information</Tabs.Tab>
+                <Tabs.Tab value="comments">Comments</Tabs.Tab>
+              </Tabs.List>
 
-              <List spacing="md">
-                <List.Item>
-                  <Text>
-                    <strong>Title:</strong> {request.title}
-                  </Text>
-                </List.Item>
-                <List.Item>
-                  <Text>
-                    <strong>Requested By:</strong> {request.requestedBy}
-                  </Text>
-                </List.Item>
-                <List.Item>
-                  <Text>
-                    <strong>Request Date:</strong>{' '}
-                    {request.requestDate.toLocaleDateString()}
-                  </Text>
-                </List.Item>
-                <List.Item>
-                  <Text>
-                    <strong>Priority:</strong>
-                    <Text
-                      span
-                      fw={500}
-                      c={
-                        request.priority === 'high'
-                          ? 'red'
-                          : request.priority === 'medium'
-                            ? 'orange'
-                            : 'green'
-                      }
-                    >
-                      {' ' +
-                        request.priority.charAt(0).toUpperCase() +
-                        request.priority.slice(1)}
-                    </Text>
-                  </Text>
-                </List.Item>
-                <List.Item>
-                  <Text>
-                    <strong>Map Type:</strong>{' '}
-                    {request.mapType.charAt(0).toUpperCase() +
-                      request.mapType.slice(1)}
-                  </Text>
-                </List.Item>
-                <List.Item>
-                  <Text>
-                    <strong>Scale:</strong> {request.scale}
-                  </Text>
-                </List.Item>
-                <List.Item>
-                  <Text>
-                    <strong>Description:</strong> {request.description}
-                  </Text>
-                </List.Item>
-                <List.Item>
-                  <Text>
-                    <strong>Purpose:</strong> {request.purpose}
-                  </Text>
-                </List.Item>
-                <List.Item>
-                  <Text>
-                    <strong>Required Format:</strong> {request.requiredFormat}
-                  </Text>
-                </List.Item>
-                <List.Item>
-                  <Text>
-                    <strong>Dimensions:</strong> {request.dimensions}
-                  </Text>
-                </List.Item>
-                <List.Item>
-                  <Text>
-                    <strong>Special Instructions:</strong>{' '}
-                    {request.specialInstructions}
-                  </Text>
-                </List.Item>
-                <List.Item>
-                  <Text>
-                    <strong>Deadline:</strong>{' '}
-                    {request.deadline.toLocaleDateString()}
-                  </Text>
-                </List.Item>
-                <List.Item>
-                  <Text>
-                    <strong>Additional Notes:</strong> {request.additionalNotes}
-                  </Text>
-                </List.Item>
-              </List>
+              <Tabs.Panel value="request" pt="md">
+                <Stack>
+                  <Group>
+                    <IconMap size={24} />
+                    <Title order={3}>Request Details</Title>
+                  </Group>
+                  <Divider />
 
-              <Divider label="Submitted Files" labelPosition="center" />
+                  <List spacing="md">
+                    <List.Item>
+                      <Text>
+                        <strong>Title:</strong> {request.title}
+                      </Text>
+                    </List.Item>
+                    <List.Item>
+                      <Text>
+                        <strong>Requested By:</strong> {request.requestedBy}
+                      </Text>
+                    </List.Item>
+                    <List.Item>
+                      <Text>
+                        <strong>Request Date:</strong>{' '}
+                        {request.requestDate.toLocaleDateString()}
+                      </Text>
+                    </List.Item>
+                    <List.Item>
+                      <Text>
+                        <strong>Priority:</strong>
+                        <Text
+                          span
+                          fw={500}
+                          c={
+                            request.priority === 'high'
+                              ? 'red'
+                              : request.priority === 'medium'
+                                ? 'orange'
+                                : 'green'
+                          }
+                        >
+                          {' ' +
+                            request.priority.charAt(0).toUpperCase() +
+                            request.priority.slice(1)}
+                        </Text>
+                      </Text>
+                    </List.Item>
+                    <List.Item>
+                      <Text>
+                        <strong>Map Type:</strong>{' '}
+                        {request.mapType.charAt(0).toUpperCase() +
+                          request.mapType.slice(1)}
+                      </Text>
+                    </List.Item>
+                    <List.Item>
+                      <Text>
+                        <strong>Scale:</strong> {request.scale}
+                      </Text>
+                    </List.Item>
+                    <List.Item>
+                      <Text>
+                        <strong>Description:</strong> {request.description}
+                      </Text>
+                    </List.Item>
+                    <List.Item>
+                      <Text>
+                        <strong>Purpose:</strong> {request.purpose}
+                      </Text>
+                    </List.Item>
+                    <List.Item>
+                      <Text>
+                        <strong>Required Format:</strong>{' '}
+                        {request.requiredFormat}
+                      </Text>
+                    </List.Item>
+                    <List.Item>
+                      <Text>
+                        <strong>Dimensions:</strong> {request.dimensions}
+                      </Text>
+                    </List.Item>
+                    <List.Item>
+                      <Text>
+                        <strong>Special Instructions:</strong>{' '}
+                        {request.specialInstructions}
+                      </Text>
+                    </List.Item>
+                    <List.Item>
+                      <Text>
+                        <strong>Deadline:</strong>{' '}
+                        {request.deadline.toLocaleDateString()}
+                      </Text>
+                    </List.Item>
+                    <List.Item>
+                      <Text>
+                        <strong>Additional Notes:</strong>{' '}
+                        {request.additionalNotes}
+                      </Text>
+                    </List.Item>
+                  </List>
 
-              <List spacing="md">
-                {request.submittedFiles.map((file, index) => (
-                  <List.Item key={index}>
-                    <Group>
-                      <Text>{file.name}</Text>
-                      <Text c="dimmed">({file.size})</Text>
-                      <Button variant="subtle" size="xs" ml="auto">
-                        Download
-                      </Button>
-                    </Group>
-                  </List.Item>
-                ))}
-              </List>
-            </Stack>
+                  <Divider label="Submitted Files" labelPosition="center" />
+
+                  <List spacing="md">
+                    {request.submittedFiles.map((file, index) => (
+                      <List.Item key={index}>
+                        <Group>
+                          <Text>{file.name}</Text>
+                          <Text c="dimmed">({file.size})</Text>
+                          <Button variant="subtle" size="xs" ml="auto">
+                            Download
+                          </Button>
+                        </Group>
+                      </List.Item>
+                    ))}
+                  </List>
+                </Stack>
+              </Tabs.Panel>
+
+              <Tabs.Panel value="approval" pt="md">
+                <Stack>
+                  <Text>
+                    <strong>Status:</strong> Approved
+                  </Text>
+                  <Text>
+                    <strong>Approved By:</strong> Jane Smith
+                  </Text>
+                  <Text>
+                    <strong>Approval Date:</strong> 2023-06-25
+                  </Text>
+                  <Text>
+                    <strong>Remarks:</strong> Approved after review of
+                    specifications and deadline feasibility.
+                  </Text>
+                </Stack>
+              </Tabs.Panel>
+
+              <Tabs.Panel value="comments" pt="md">
+                <Stack>
+                  {/* Chat History */}
+                  <ScrollArea
+                    style={{ flex: 1 }}
+                    scrollbarSize={6}
+                    scrollHideDelay={1000}
+                  >
+                    <Stack pr="sm">
+                      {chatMessages.map((message: IChatMessage) => (
+                        <ChatMessage key={message.id} message={message} />
+                      ))}
+                    </Stack>
+                  </ScrollArea>
+
+                  {/* Message Input */}
+                  <Paper withBorder p="sm" radius="md">
+                    <Flex gap="sm" align="flex-end">
+                      <Textarea
+                        placeholder="Type your comment or review..."
+                        value={newMessage}
+                        onChange={(
+                          event: React.ChangeEvent<HTMLTextAreaElement>
+                        ) => setNewMessage(event.currentTarget.value)}
+                        onKeyPress={handleKeyPress}
+                        autosize
+                        minRows={1}
+                        maxRows={3}
+                        style={{ flex: 1 }}
+                      />
+                      <ActionIcon
+                        size="lg"
+                        variant="filled"
+                        color="blue"
+                        onClick={handleSendMessage}
+                        disabled={!newMessage.trim()}
+                      >
+                        <IconSend size={16} />
+                      </ActionIcon>
+                    </Flex>
+                  </Paper>
+                </Stack>
+              </Tabs.Panel>
+            </Tabs>
           </Paper>
         </Grid.Col>
 
