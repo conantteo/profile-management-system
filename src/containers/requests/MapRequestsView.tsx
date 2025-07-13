@@ -1,12 +1,10 @@
 import {
-  ActionIcon,
   Box,
   Button,
   Card,
   Container,
   Flex,
   Group,
-  Menu,
   MultiSelect,
   Select,
   Stack,
@@ -16,15 +14,9 @@ import {
   Title,
 } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
-import {
-  IconDotsVertical,
-  IconEdit,
-  IconEye,
-  IconMap,
-  IconTrash,
-  IconX,
-} from '@tabler/icons-react';
+import { IconMap, IconX } from '@tabler/icons-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // Mock data for map requests
 const mockMapRequests = [
@@ -120,6 +112,7 @@ const COLUMN_WIDTHS = {
 };
 
 export function MapRequestsView() {
+  const navigate = useNavigate();
   // State for filters
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [titleFilter, setTitleFilter] = useState('');
@@ -622,35 +615,20 @@ export function MapRequestsView() {
                   {/* Sticky Actions Column */}
                   <Table.Td
                     style={{
-                      width: COLUMN_WIDTHS.actions,
                       position: 'sticky',
                       right: 0,
-                      backgroundColor: 'white',
+                      background: '#fff',
                       zIndex: 1,
-                      borderLeft: '1px solid var(--mantine-color-gray-3)',
+                      minWidth: 100,
                     }}
                   >
-                    <Menu position="bottom-end" withArrow shadow="md">
-                      <Menu.Target>
-                        <ActionIcon variant="subtle">
-                          <IconDotsVertical size={16} />
-                        </ActionIcon>
-                      </Menu.Target>
-                      <Menu.Dropdown>
-                        <Menu.Item leftSection={<IconEye size={14} />}>
-                          View Details
-                        </Menu.Item>
-                        <Menu.Item leftSection={<IconEdit size={14} />}>
-                          Edit Request
-                        </Menu.Item>
-                        <Menu.Item
-                          leftSection={<IconTrash size={14} />}
-                          color="red"
-                        >
-                          Delete Request
-                        </Menu.Item>
-                      </Menu.Dropdown>
-                    </Menu>
+                    <Button
+                      onClick={() => navigate(`/request/map/${request.id}`)}
+                      variant="filled"
+                      size="xs"
+                    >
+                      Open
+                    </Button>
                   </Table.Td>
                 </Table.Tr>
               ))}
