@@ -38,6 +38,26 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
+interface LinkageData {
+  id: string;
+  fromProfile: {
+    profileId: string;
+    profileType: 'person' | 'map' | 'book' | 'country' | 'abbreviations';
+    profileName: string;
+  };
+  toProfile: {
+    profileId: string;
+    profileType: 'person' | 'map' | 'book' | 'country' | 'abbreviations';
+    profileName: string;
+  };
+  linkageType: string;
+  remarks: string;
+  createdBy: string;
+  createdAt: string;
+  modifiedBy: string;
+  modifiedAt: string;
+}
+
 interface PersonData {
   id: string;
   name: string;
@@ -81,6 +101,7 @@ interface PersonData {
     country: string;
     address: string;
   } | null;
+  linkages: LinkageData[];
 }
 
 export function PersonProfile() {
@@ -121,6 +142,27 @@ export function PersonProfile() {
   const [expandedDetails, setExpandedDetails] = useState<Set<string>>(
     new Set()
   );
+  // Linkages state
+  const [linkageModalOpen, setLinkageModalOpen] = useState(false);
+  const [editingLinkage, setEditingLinkage] = useState<LinkageData | null>(
+    null
+  );
+  const [linkageForm, setLinkageForm] = useState({
+    fromProfile: {
+      profileId: '',
+      profileType: '' as LinkageData['fromProfile']['profileType'] | '',
+      profileName: '',
+    },
+    toProfile: {
+      profileId: '',
+      profileType: '' as LinkageData['toProfile']['profileType'] | '',
+      profileName: '',
+    },
+    linkageType: '',
+    remarks: '',
+  });
+
+  const [isCreateLinkageMode, setIsCreateLinkageMode] = useState(false);
 
   // Mock data - replace with actual API call
   const personData: PersonData = {
@@ -310,6 +352,68 @@ export function PersonProfile() {
       },
     ],
     personalBio: personalBioData, // Use state data
+    linkages: [
+      {
+        id: '1',
+        fromProfile: {
+          profileId: 'person-001',
+          profileType: 'person',
+          profileName: 'John Doe',
+        },
+        toProfile: {
+          profileId: 'person-123',
+          profileType: 'person',
+          profileName: 'Jane Smith',
+        },
+        linkageType: 'Colleague',
+        remarks:
+          'Worked together on the cloud migration project. Jane provided valuable insights on system architecture.',
+        createdBy: 'John Doe',
+        createdAt: '2024-01-15T10:30:00Z',
+        modifiedBy: 'HR Manager',
+        modifiedAt: '2024-01-20T14:15:00Z',
+      },
+      {
+        id: '2',
+        fromProfile: {
+          profileId: 'person-001',
+          profileType: 'person',
+          profileName: 'John Doe',
+        },
+        toProfile: {
+          profileId: 'book-456',
+          profileType: 'book',
+          profileName: 'Clean Code by Robert Martin',
+        },
+        linkageType: 'Recommended Reading',
+        remarks:
+          'Highly influential book that shaped my coding practices. Referenced frequently in code reviews.',
+        createdBy: 'Tech Lead',
+        createdAt: '2024-01-10T09:00:00Z',
+        modifiedBy: 'John Doe',
+        modifiedAt: '2024-01-18T16:30:00Z',
+      },
+      {
+        id: '3',
+        fromProfile: {
+          profileId: 'person-001',
+          profileType: 'person',
+          profileName: 'John Doe',
+        },
+        toProfile: {
+          profileId: 'country-789',
+          profileType: 'country',
+          profileName: 'Germany',
+        },
+        linkageType: 'Work Location',
+        remarks:
+          'Spent 6 months working at our Berlin office. Gained experience with European data privacy regulations.',
+        createdBy: 'Admin',
+        createdAt: '2024-01-05T11:45:00Z',
+        modifiedBy: 'Admin',
+        modifiedAt: '2024-01-05T11:45:00Z',
+      },
+    ],
   };
 
   const sections = useMemo(
@@ -328,6 +432,11 @@ export function PersonProfile() {
         id: 'address',
         label: 'Address',
         icon: IconHome,
+      },
+      {
+        id: 'linkages',
+        label: 'Linkages',
+        icon: IconUser,
       },
       {
         id: 'fun-facts',
@@ -570,6 +679,110 @@ export function PersonProfile() {
       }
       return newSet;
     });
+  };
+
+  // Linkage handlers
+  const handleEditLinkage = (linkage: LinkageData) => {
+    setEditingLinkage(linkage);
+    setLinkageForm({
+      fromProfile: {
+        profileId: linkage.fromProfile.profileId,
+        profileType: linkage.fromProfile.profileType,
+        profileName: linkage.fromProfile.profileName,
+      },
+      toProfile: {
+        profileId: linkage.toProfile.profileId,
+        profileType: linkage.toProfile.profileType,
+        profileName: linkage.toProfile.profileName,
+      },
+      linkageType: linkage.linkageType,
+      remarks: linkage.remarks,
+    });
+    setIsCreateLinkageMode(false);
+    setLinkageModalOpen(true);
+  };
+
+  const handleCreateLinkage = () => {
+    setEditingLinkage(null);
+    setLinkageForm({
+      fromProfile: {
+        profileId: personData.id, // Pre-populate with current person's ID
+        profileType: 'person',
+        profileName: personData.name,
+      },
+      toProfile: {
+        profileId: '',
+        profileType: '',
+        profileName: '',
+      },
+      linkageType: '',
+      remarks: '',
+    });
+    setIsCreateLinkageMode(true);
+    setLinkageModalOpen(true);
+  };
+
+  const handleCancelLinkage = () => {
+    setLinkageModalOpen(false);
+    setEditingLinkage(null);
+    setLinkageForm({
+      fromProfile: {
+        profileId: '',
+        profileType: '',
+        profileName: '',
+      },
+      toProfile: {
+        profileId: '',
+        profileType: '',
+        profileName: '',
+      },
+      linkageType: '',
+      remarks: '',
+    });
+    setIsCreateLinkageMode(false);
+  };
+
+  // Linkage handlers
+
+  const handleSaveLinkage = () => {
+    if (isCreateLinkageMode) {
+      console.log('Creating new linkage:', linkageForm);
+    } else if (editingLinkage) {
+      console.log(`Saving edit for linkage ${editingLinkage.id}:`, linkageForm);
+    }
+
+    setLinkageModalOpen(false);
+    setEditingLinkage(null);
+    setLinkageForm({
+      fromProfile: {
+        profileId: '',
+        profileType: '',
+        profileName: '',
+      },
+      toProfile: {
+        profileId: '',
+        profileType: '',
+        profileName: '',
+      },
+      linkageType: '',
+      remarks: '',
+    });
+    setIsCreateLinkageMode(false);
+  };
+
+  const getProfileTypeColor = (
+    type:
+      | LinkageData['fromProfile']['profileType']
+      | LinkageData['toProfile']['profileType']
+  ) => {
+    const colors = {
+      person: 'blue',
+      map: 'green',
+      book: 'orange',
+      country: 'red',
+      abbreviations: 'purple',
+    };
+    return colors[type] || 'gray';
   };
 
   const renderProfessionalDetails = () => (
@@ -1012,6 +1225,198 @@ export function PersonProfile() {
     </Card>
   );
 
+  const renderLinkages = () => (
+    <Card
+      shadow="sm"
+      padding="lg"
+      radius="md"
+      withBorder
+      id="linkages"
+      ref={(el) => {
+        sectionRefs.current['linkages'] = el;
+      }}
+      mb="xl"
+    >
+      <Stack gap="md">
+        <Group justify="space-between">
+          <Title order={3}>Linkages</Title>
+          <Button
+            leftSection={<IconPlus size="1rem" />}
+            variant="outline"
+            size="sm"
+            onClick={handleCreateLinkage}
+          >
+            Add Linkage
+          </Button>
+        </Group>
+
+        <Text c="dimmed" mb="md">
+          Connections to other profiles, resources, and entities that provide
+          context and relationships.
+        </Text>
+
+        <Table striped highlightOnHover>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>From Profile</Table.Th>
+              <Table.Th>To Profile</Table.Th>
+              <Table.Th>Linkage Type</Table.Th>
+              <Table.Th>Created By</Table.Th>
+              <Table.Th>Modified By</Table.Th>
+              <Table.Th>Actions</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {personData.linkages.map((linkage) => (
+              <>
+                <Table.Tr key={linkage.id}>
+                  <Table.Td>
+                    <Stack gap="xs">
+                      <Group gap="xs">
+                        <Badge
+                          color={getProfileTypeColor(
+                            linkage.fromProfile.profileType
+                          )}
+                          variant="light"
+                          size="sm"
+                        >
+                          {linkage.fromProfile.profileType}
+                        </Badge>
+                        <Text fw={500} size="sm">
+                          {linkage.fromProfile.profileName}
+                        </Text>
+                      </Group>
+                      <Text
+                        size="xs"
+                        c="dimmed"
+                        style={{ fontFamily: 'monospace' }}
+                      >
+                        {linkage.fromProfile.profileId}
+                      </Text>
+                    </Stack>
+                  </Table.Td>
+                  <Table.Td>
+                    <Stack gap="xs">
+                      <Group gap="xs">
+                        <Badge
+                          color={getProfileTypeColor(
+                            linkage.toProfile.profileType
+                          )}
+                          variant="light"
+                          size="sm"
+                        >
+                          {linkage.toProfile.profileType}
+                        </Badge>
+                        <Text fw={500} size="sm">
+                          {linkage.toProfile.profileName}
+                        </Text>
+                      </Group>
+                      <Text
+                        size="xs"
+                        c="dimmed"
+                        style={{ fontFamily: 'monospace' }}
+                      >
+                        {linkage.toProfile.profileId}
+                      </Text>
+                    </Stack>
+                  </Table.Td>
+                  <Table.Td>{linkage.linkageType}</Table.Td>
+                  <Table.Td>
+                    <Text size="sm" c="dimmed">
+                      {linkage.createdBy}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="sm" c="dimmed">
+                      {linkage.modifiedBy}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Group gap="xs">
+                      <ActionIcon
+                        variant="subtle"
+                        color="blue"
+                        onClick={() => toggleDetailExpansion(linkage.id)}
+                        aria-label={
+                          expandedDetails.has(linkage.id)
+                            ? 'Collapse remarks'
+                            : 'Expand remarks'
+                        }
+                      >
+                        {expandedDetails.has(linkage.id) ? (
+                          <IconMinus size="1rem" />
+                        ) : (
+                          <IconPlus size="1rem" />
+                        )}
+                      </ActionIcon>
+                      <Menu position="bottom-end" shadow="md">
+                        <Menu.Target>
+                          <ActionIcon variant="subtle" color="gray">
+                            <IconDotsVertical size="1rem" />
+                          </ActionIcon>
+                        </Menu.Target>
+                        <Menu.Dropdown>
+                          <Menu.Item
+                            leftSection={
+                              <IconInfoCircle size="1rem" color="gray" />
+                            }
+                            disabled
+                          >
+                            {`Created by ${linkage.createdBy} on ${new Date(linkage.createdAt).toLocaleDateString()}`}
+                          </Menu.Item>
+                          <Menu.Item
+                            leftSection={
+                              <IconInfoCircle size="1rem" color="gray" />
+                            }
+                            disabled
+                          >
+                            {`Modified by ${linkage.modifiedBy} on ${new Date(linkage.modifiedAt).toLocaleDateString()}`}
+                          </Menu.Item>
+                          <Menu.Item
+                            leftSection={<IconEdit size="1rem" color="blue" />}
+                            onClick={() => handleEditLinkage(linkage)}
+                          >
+                            Edit
+                          </Menu.Item>
+                          <Menu.Item
+                            leftSection={<IconTrash size="1rem" color="red" />}
+                            onClick={() => console.log('Delete', linkage.id)}
+                            color="red"
+                          >
+                            Delete
+                          </Menu.Item>
+                        </Menu.Dropdown>
+                      </Menu>
+                    </Group>
+                  </Table.Td>
+                </Table.Tr>
+                {expandedDetails.has(linkage.id) && (
+                  <Table.Tr key={`${linkage.id}-remarks`}>
+                    <Table.Td colSpan={7}>
+                      <Box p="sm" bg="gray.0">
+                        <Text size="sm" fw={500} mb="xs">
+                          Remarks:
+                        </Text>
+                        <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
+                          {linkage.remarks}
+                        </Text>
+                      </Box>
+                    </Table.Td>
+                  </Table.Tr>
+                )}
+              </>
+            ))}
+          </Table.Tbody>
+        </Table>
+
+        <Text mt="md" size="sm" c="dimmed">
+          These linkages help establish connections and provide context for
+          professional and personal relationships.
+        </Text>
+      </Stack>
+    </Card>
+  );
+
   return (
     <Container fluid py="xl">
       <Stack gap="lg">
@@ -1084,6 +1489,7 @@ export function PersonProfile() {
               {renderProfessionalDetails()}
               {renderSkills()}
               {renderAddress()}
+              {renderLinkages()}
               {renderFunFacts()}
               {renderPersonalBio()}
             </Stack>
@@ -1259,6 +1665,216 @@ export function PersonProfile() {
               }
             >
               {isCreateProfessionalMode ? 'Create' : 'Save Changes'}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      {/* Edit/Create Linkage Modal */}
+      <Modal
+        opened={linkageModalOpen}
+        onClose={handleCancelLinkage}
+        title={isCreateLinkageMode ? 'Create Linkage' : 'Edit Linkage'}
+        centered
+        size="xl"
+      >
+        <Stack gap="md">
+          <SimpleGrid cols={2} spacing="lg">
+            {/* Left Column - From Profile */}
+            <Stack gap="md">
+              <Title order={4} c="blue">
+                Link From Profile
+              </Title>
+
+              <Select
+                label="Profile Type"
+                placeholder="Select profile type..."
+                value={linkageForm.fromProfile.profileType}
+                onChange={(value) =>
+                  setLinkageForm((prev) => ({
+                    ...prev,
+                    fromProfile: {
+                      ...prev.fromProfile,
+                      profileType:
+                        (value as LinkageData['fromProfile']['profileType']) ||
+                        '',
+                    },
+                  }))
+                }
+                data={[
+                  { value: 'person', label: 'Person' },
+                  { value: 'map', label: 'Map' },
+                  { value: 'book', label: 'Book' },
+                  { value: 'country', label: 'Country' },
+                  { value: 'abbreviations', label: 'Abbreviations' },
+                ]}
+                required
+              />
+
+              <TextInput
+                label="Profile ID"
+                placeholder="Enter profile ID..."
+                value={linkageForm.fromProfile.profileId}
+                onChange={(e) =>
+                  setLinkageForm((prev) => ({
+                    ...prev,
+                    fromProfile: {
+                      ...prev.fromProfile,
+                      profileId: e.target.value,
+                    },
+                  }))
+                }
+                required
+              />
+
+              <TextInput
+                label="Profile Name"
+                placeholder="Enter profile name..."
+                value={linkageForm.fromProfile.profileName}
+                onChange={(e) =>
+                  setLinkageForm((prev) => ({
+                    ...prev,
+                    fromProfile: {
+                      ...prev.fromProfile,
+                      profileName: e.target.value,
+                    },
+                  }))
+                }
+                required
+              />
+            </Stack>
+
+            {/* Right Column - To Profile */}
+            <Stack gap="md">
+              <Title order={4} c="green">
+                Link To Profile
+              </Title>
+
+              <Select
+                label="Profile Type"
+                placeholder="Select profile type..."
+                value={linkageForm.toProfile.profileType}
+                onChange={(value) =>
+                  setLinkageForm((prev) => ({
+                    ...prev,
+                    toProfile: {
+                      ...prev.toProfile,
+                      profileType:
+                        (value as LinkageData['toProfile']['profileType']) ||
+                        '',
+                    },
+                  }))
+                }
+                data={[
+                  { value: 'person', label: 'Person' },
+                  { value: 'map', label: 'Map' },
+                  { value: 'book', label: 'Book' },
+                  { value: 'country', label: 'Country' },
+                  { value: 'abbreviations', label: 'Abbreviations' },
+                ]}
+                required
+              />
+
+              <TextInput
+                label="Profile ID"
+                placeholder="Enter profile ID..."
+                value={linkageForm.toProfile.profileId}
+                onChange={(e) =>
+                  setLinkageForm((prev) => ({
+                    ...prev,
+                    toProfile: {
+                      ...prev.toProfile,
+                      profileId: e.target.value,
+                    },
+                  }))
+                }
+                required
+              />
+
+              <TextInput
+                label="Profile Name"
+                placeholder="Enter profile name..."
+                value={linkageForm.toProfile.profileName}
+                onChange={(e) =>
+                  setLinkageForm((prev) => ({
+                    ...prev,
+                    toProfile: {
+                      ...prev.toProfile,
+                      profileName: e.target.value,
+                    },
+                  }))
+                }
+                required
+              />
+            </Stack>
+          </SimpleGrid>
+
+          {/* Linkage Details - Full Width */}
+          <Stack gap="md">
+            <Title order={4} c="orange">
+              Linkage Details
+            </Title>
+
+            <TextInput
+              label="Linkage Type"
+              placeholder="Enter linkage type (e.g., Colleague, Reference, etc.)..."
+              value={linkageForm.linkageType}
+              onChange={(e) =>
+                setLinkageForm((prev) => ({
+                  ...prev,
+                  linkageType: e.target.value,
+                }))
+              }
+              required
+            />
+
+            <Textarea
+              label="Remarks"
+              placeholder="Enter detailed remarks about this linkage..."
+              value={linkageForm.remarks}
+              onChange={(e) =>
+                setLinkageForm((prev) => ({
+                  ...prev,
+                  remarks: e.target.value,
+                }))
+              }
+              rows={6}
+              description="Rich-text field for detailed information about the linkage relationship"
+            />
+          </Stack>
+
+          {editingLinkage && !isCreateLinkageMode && (
+            <Stack gap="xs">
+              <Text size="sm" c="dimmed">
+                <strong>Created:</strong>{' '}
+                {new Date(editingLinkage.createdAt).toLocaleDateString()} by{' '}
+                {editingLinkage.createdBy}
+              </Text>
+              <Text size="sm" c="dimmed">
+                <strong>Last modified:</strong>{' '}
+                {new Date(editingLinkage.modifiedAt).toLocaleDateString()} by{' '}
+                {editingLinkage.modifiedBy}
+              </Text>
+            </Stack>
+          )}
+
+          <Group justify="flex-end" gap="sm">
+            <Button variant="outline" onClick={handleCancelLinkage}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveLinkage}
+              disabled={
+                !linkageForm.fromProfile.profileType ||
+                !linkageForm.fromProfile.profileId ||
+                !linkageForm.fromProfile.profileName ||
+                !linkageForm.toProfile.profileType ||
+                !linkageForm.toProfile.profileId ||
+                !linkageForm.toProfile.profileName ||
+                !linkageForm.linkageType
+              }
+            >
+              {isCreateLinkageMode ? 'Create' : 'Save Changes'}
             </Button>
           </Group>
         </Stack>
