@@ -209,7 +209,7 @@ export function SearchResults() {
               query={searchQuery}
               setQuery={setSearchQuery}
             />
-            <Group justify="center" gap="xs" mt="lg" wrap="wrap">
+            <Group justify="flex-start" gap="xs" mt="lg" wrap="wrap">
               {categories.map((category) => (
                 <Button
                   key={category.id}

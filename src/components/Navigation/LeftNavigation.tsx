@@ -4,6 +4,7 @@ import {
   IconClipboardList,
   IconDatabase,
   IconForms,
+  IconHome,
   IconLayoutDashboard,
   IconMap,
   IconReport,
@@ -102,6 +103,24 @@ export function LeftNavigation() {
         alignItems: 'center',
       }}
     >
+      {/* Main Menu at top */}
+      <UnstyledButton
+        style={{
+          width: 48,
+          height: 48,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: 'transparent',
+          color: 'var(--mantine-color-gray-7)',
+          transition: 'all 0.2s ease',
+          outline: 'none',
+        }}
+        onClick={() => navigate('/')}
+      >
+        <IconHome size={24} />
+      </UnstyledButton>
+
       <Box style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
         <Stack gap="sm" align="center">
           {/* Search/Home Button */}
@@ -120,10 +139,6 @@ export function LeftNavigation() {
                 : 'var(--mantine-color-gray-7)',
               transition: 'all 0.2s ease',
               outline: 'none',
-              '&:hover': {
-                backgroundColor: 'var(--mantine-color-green-1)',
-                color: 'var(--mantine-color-green-7)',
-              },
             }}
             onClick={() => navigate('/')}
           >
@@ -157,10 +172,6 @@ export function LeftNavigation() {
                     : 'var(--mantine-color-gray-7)',
                   transition: 'all 0.2s ease',
                   outline: 'none',
-                  '&:hover': {
-                    backgroundColor: 'var(--mantine-color-green-1)',
-                    color: 'var(--mantine-color-green-7)',
-                  },
                 }}
               >
                 <IconForms size={24} />
@@ -224,10 +235,6 @@ export function LeftNavigation() {
                     : 'var(--mantine-color-gray-7)',
                   transition: 'all 0.2s ease',
                   outline: 'none',
-                  '&:hover': {
-                    backgroundColor: 'var(--mantine-color-green-1)',
-                    color: 'var(--mantine-color-green-7)',
-                  },
                 }}
               >
                 <IconClipboardList size={24} />
@@ -291,10 +298,6 @@ export function LeftNavigation() {
                     : 'var(--mantine-color-gray-7)',
                   transition: 'all 0.2s ease',
                   outline: 'none',
-                  '&:hover': {
-                    backgroundColor: 'var(--mantine-color-green-1)',
-                    color: 'var(--mantine-color-green-7)',
-                  },
                 }}
               >
                 <IconChartBar size={24} />
@@ -358,10 +361,6 @@ export function LeftNavigation() {
                     : 'var(--mantine-color-gray-7)',
                   transition: 'all 0.2s ease',
                   outline: 'none',
-                  '&:hover': {
-                    backgroundColor: 'var(--mantine-color-green-1)',
-                    color: 'var(--mantine-color-green-7)',
-                  },
                 }}
                 onClick={() => navigate('/admin')}
               >
@@ -418,10 +417,6 @@ export function LeftNavigation() {
             color: 'var(--mantine-color-gray-7)',
             transition: 'all 0.2s ease',
             outline: 'none',
-            '&:hover': {
-              backgroundColor: 'var(--mantine-color-gray-2)',
-              color: 'var(--mantine-color-gray-9)',
-            },
           }}
         >
           <IconUser size={24} />
