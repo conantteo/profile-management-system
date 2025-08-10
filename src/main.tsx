@@ -1,4 +1,9 @@
 import { MantineProvider, createTheme } from '@mantine/core';
+import {
+  AllEnterpriseModule,
+  LicenseManager,
+  ModuleRegistry,
+} from 'ag-grid-enterprise';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
@@ -39,6 +44,11 @@ const theme = createTheme({
   primaryColor: 'primary',
   primaryShade: 6,
 });
+
+LicenseManager.setLicenseKey(
+  'BOARD4ALL_NDEwMjM1MTIwMDAwMA==8f4481b5cc626ad79fe91bc5f4e52e3d'
+);
+ModuleRegistry.registerModules([AllEnterpriseModule]);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

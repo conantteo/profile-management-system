@@ -10,25 +10,21 @@ import {
   Menu,
   Modal,
   NavLink,
-  Select,
   SimpleGrid,
   Stack,
-  Table,
   Text,
   TextInput,
-  Textarea,
   Title,
 } from '@mantine/core';
-import { Link, RichTextEditor } from '@mantine/tiptap';
 import {
   IconBriefcase,
   IconDotsVertical,
   IconEdit,
+  IconFolder,
   IconHome,
   IconInfoCircle,
   IconMail,
   IconMapPin,
-  IconMinus,
   IconMoodSmile,
   IconPlus,
   IconRefresh,
@@ -36,35 +32,13 @@ import {
   IconTrash,
   IconUser,
 } from '@tabler/icons-react';
-import Highlight from '@tiptap/extension-highlight';
-import SubScript from '@tiptap/extension-subscript';
-import Superscript from '@tiptap/extension-superscript';
-import TextAlign from '@tiptap/extension-text-align';
-import Underline from '@tiptap/extension-underline';
-import { useEditor } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-
-interface LinkageData {
-  id: string;
-  fromProfile: {
-    profileId: string;
-    profileType: 'person' | 'map' | 'book' | 'country' | 'abbreviations';
-    profileName: string;
-  };
-  toProfile: {
-    profileId: string;
-    profileType: 'person' | 'map' | 'book' | 'country' | 'abbreviations';
-    profileName: string;
-  };
-  linkageType: string;
-  remarks: string;
-  createdBy: string;
-  createdAt: string;
-  modifiedBy: string;
-  modifiedAt: string;
-}
+import { AttachmentSegment } from '../../components/Segment/AttachmentSegment';
+import { HistoricalRecordsSegment } from '../../components/Segment/HistoricalRecordsSegment';
+import { LinkageSegment } from '../../components/Segment/LinkageSegment';
+import type { HistoricalRecord } from '../../types/historicalRecord';
+import type { Linkage } from '../../types/linkage';
 
 interface PersonData {
   id: string;
@@ -78,17 +52,7 @@ interface PersonData {
   joinDate: string;
   skills: string[];
   bio: string;
-  professionalDetails: Array<{
-    id: string;
-    type: string;
-    title: string;
-    company: string;
-    startDate: string;
-    endDate: string;
-    description: string;
-    modifiedBy: string;
-    modifiedAt: string;
-  }>;
+  historicalRecords: Array<HistoricalRecord>;
   address: {
     street: string;
     city: string;
@@ -109,14 +73,14 @@ interface PersonData {
     country: string;
     address: string;
   } | null;
-  linkages: LinkageData[];
+  linkages: Linkage[];
 }
 
 export function PersonProfile() {
   const { id } = useParams<{ id: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeSection, setActiveSection] = useState(
-    searchParams.get('section') || 'professional-details'
+    searchParams.get('section') || 'historical-records'
   );
   const sectionRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const isScrollingToSection = useRef(false);
@@ -130,68 +94,6 @@ export function PersonProfile() {
   >(null);
   const [editText, setEditText] = useState('');
   const [isCreateMode, setIsCreateMode] = useState(false);
-
-  // Professional details state
-  const [professionalDetailModalOpen, setProfessionalDetailModalOpen] =
-    useState(false);
-  const [editingProfessionalDetail, setEditingProfessionalDetail] = useState<
-    PersonData['professionalDetails'][0] | null
-  >(null);
-  const [professionalDetailForm, setProfessionalDetailForm] = useState({
-    type: '',
-    title: '',
-    company: '',
-    startDate: '',
-    endDate: '',
-    description: '',
-  });
-  const [isCreateProfessionalMode, setIsCreateProfessionalMode] =
-    useState(false);
-  const [expandedDetails, setExpandedDetails] = useState<Set<string>>(
-    new Set()
-  );
-  // Linkages state
-  const [linkageModalOpen, setLinkageModalOpen] = useState(false);
-  const [editingLinkage, setEditingLinkage] = useState<LinkageData | null>(
-    null
-  );
-  const [linkageForm, setLinkageForm] = useState({
-    fromProfile: {
-      profileId: '',
-      profileType: '' as LinkageData['fromProfile']['profileType'] | '',
-      profileName: '',
-    },
-    toProfile: {
-      profileId: '',
-      profileType: '' as LinkageData['toProfile']['profileType'] | '',
-      profileName: '',
-    },
-    linkageType: '',
-    remarks: '',
-  });
-
-  const [isCreateLinkageMode, setIsCreateLinkageMode] = useState(false);
-
-  // Initialize the editor
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Underline,
-      Link,
-      Superscript,
-      SubScript,
-      Highlight,
-      TextAlign.configure({ types: ['heading', 'paragraph'] }),
-    ],
-    content: '',
-    onUpdate: ({ editor }) => {
-      const html = editor.getHTML();
-      setLinkageForm((prev) => ({
-        ...prev,
-        remarks: html,
-      }));
-    },
-  });
 
   // Mock data - replace with actual API call
   const personData: PersonData = {
@@ -215,52 +117,40 @@ export function PersonProfile() {
       'MongoDB',
     ],
     bio: 'Experienced software engineer with a passion for building scalable web applications and mentoring junior developers.',
-    professionalDetails: [
+    historicalRecords: [
       {
         id: '1',
-        type: 'Work Experience',
-        title: 'Senior Software Engineer',
-        company: 'Tech Corp',
-        startDate: '2020-01-15',
-        endDate: 'Present',
+        startDate: '15/01/2020',
+        endDate: '',
         description:
           'Lead development of scalable web applications and mentor junior developers.',
-        modifiedBy: 'HR Manager',
-        modifiedAt: '2024-01-15T10:30:00Z',
+        submissionNo: '1',
+        status: 'PROCESSED',
       },
       {
         id: '2',
-        type: 'Work Experience',
-        title: 'Software Engineer',
-        company: 'StartupXYZ',
-        startDate: '2018-03-01',
-        endDate: '2019-12-31',
+        startDate: '01/03/2016',
+        endDate: '31/12/2019',
         description:
           'Developed full-stack applications using React and Node.js.',
-        modifiedBy: 'Admin',
-        modifiedAt: '2024-01-10T14:20:00Z',
+        submissionNo: '2',
+        status: 'PROCESSED',
       },
       {
         id: '3',
-        type: 'Education',
-        title: 'M.S. Computer Science',
-        company: 'Stanford University',
-        startDate: '2014-09-01',
-        endDate: '2016-06-30',
+        startDate: '01/09/2014',
+        endDate: '30/06/2016',
         description: 'Specialized in distributed systems and machine learning.',
-        modifiedBy: 'Admin',
-        modifiedAt: '2024-01-08T09:15:00Z',
+        submissionNo: '3',
+        status: 'PROCESSED',
       },
       {
         id: '4',
-        type: 'Certification',
-        title: 'AWS Certified Solutions Architect',
-        company: 'Amazon Web Services',
-        startDate: '2021-05-15',
-        endDate: '2024-05-15',
+        startDate: '15/05/2021',
+        endDate: '15/05/2024',
         description: 'Professional level certification for cloud architecture.',
-        modifiedBy: 'John Doe',
-        modifiedAt: '2024-01-05T16:45:00Z',
+        submissionNo: '4',
+        status: 'PENDING',
       },
     ],
     address: {
@@ -383,64 +273,149 @@ export function PersonProfile() {
     personalBio: personalBioData, // Use state data
     linkages: [
       {
-        id: '1',
-        fromProfile: {
-          profileId: 'person-001',
-          profileType: 'person',
-          profileName: 'John Doe',
+        id: '1a2b3c',
+        type: 'Partnership',
+        details: [
+          { key: 'agreementType', value: 'Exclusive' },
+          { key: 'duration', value: '5 years' },
+        ],
+        remarks: 'Initial partnership agreement.',
+        entity1Alias: 'Alpha Corp',
+        entity2Alias: 'Beta LLC',
+        startDate: '01/01/2023',
+        endDate: '01/01/2028',
+        createdDate: '15/12/2022',
+        createdBy: 'adminUser',
+        lastUpdatedDate: '10/02/2023',
+        lastUpdatedBy: 'adminUser',
+        entity1: {
+          id: 'E1-001',
+          idNumber: 'A12345',
+          type: 'country',
+          name: 'Alpha Country',
         },
-        toProfile: {
-          profileId: 'person-123',
-          profileType: 'person',
-          profileName: 'Jane Smith',
+        entity2: {
+          id: 'E2-002',
+          idNumber: 'B67890',
+          type: 'book',
+          name: 'Beta Book',
         },
-        linkageType: 'Colleague',
-        remarks:
-          '<p>Worked together on the <strong>cloud migration project</strong>. Jane provided valuable insights on:</p><ul><li>System architecture</li><li>Database optimization</li><li>Security best practices</li></ul><p><em>Highly recommended for future collaborations.</em></p>',
-        createdBy: 'John Doe',
-        createdAt: '2024-01-15T10:30:00Z',
-        modifiedBy: 'HR Manager',
-        modifiedAt: '2024-01-20T14:15:00Z',
       },
       {
-        id: '2',
-        fromProfile: {
-          profileId: 'person-001',
-          profileType: 'person',
-          profileName: 'John Doe',
+        id: '4d5e6f',
+        type: 'Supplier',
+        details: [
+          { key: 'region', value: 'APAC' },
+          { key: 'contractValue', value: '500000 USD' },
+        ],
+        remarks: 'Supplier for hardware components.',
+        entity1Alias: 'Gamma Inc',
+        entity2Alias: 'Delta Supplies',
+        startDate: '01/03/2024',
+        endDate: '01/03/2025',
+        createdDate: '20/02/2024',
+        createdBy: 'supplierMgr',
+        lastUpdatedDate: '25/02/2024',
+        lastUpdatedBy: 'supplierMgr',
+        entity1: {
+          id: 'E1-010',
+          idNumber: 'G54321',
+          type: 'abbreviation',
+          name: 'GMA',
         },
-        toProfile: {
-          profileId: 'book-456',
-          profileType: 'book',
-          profileName: 'Clean Code by Robert Martin',
+        entity2: {
+          id: 'E2-020',
+          idNumber: 'D09876',
+          type: 'map',
+          name: 'Delta Region Map',
         },
-        linkageType: 'Recommended Reading',
-        remarks:
-          '<p><strong>Highly influential book</strong> that shaped my coding practices.</p><p>Key takeaways:</p><ol><li>Write <em>meaningful</em> variable names</li><li>Keep functions small and focused</li><li>Use consistent formatting</li></ol><p>Referenced frequently in <mark>code reviews</mark> and team discussions.</p>',
-        createdBy: 'Tech Lead',
-        createdAt: '2024-01-10T09:00:00Z',
-        modifiedBy: 'John Doe',
-        modifiedAt: '2024-01-18T16:30:00Z',
       },
       {
-        id: '3',
-        fromProfile: {
-          profileId: 'person-001',
-          profileType: 'person',
-          profileName: 'John Doe',
+        id: '7g8h9i',
+        type: 'Contract',
+        details: [
+          { key: 'contractType', value: 'Service' },
+          { key: 'paymentTerms', value: 'Net 30' },
+        ],
+        remarks: 'Service contract for IT support.',
+        entity1Alias: 'Omega Solutions',
+        entity2Alias: 'Sigma Tech',
+        startDate: '15/06/2022',
+        endDate: '15/06/2023',
+        createdDate: '20/05/2022',
+        createdBy: 'contractAdmin',
+        lastUpdatedDate: '01/12/2022',
+        lastUpdatedBy: 'contractAdmin',
+        entity1: {
+          id: 'E1-100',
+          idNumber: 'O98765',
+          type: 'person',
+          name: 'Omega Person',
         },
-        toProfile: {
-          profileId: 'country-789',
-          profileType: 'country',
-          profileName: 'Germany',
+        entity2: {
+          id: 'E2-200',
+          idNumber: 'S43210',
+          type: 'person',
+          name: 'Sigma Person',
         },
-        linkageType: 'Work Location',
-        remarks:
-          '<p>Spent <strong>6 months</strong> working at our Berlin office.</p><p>Gained experience with:</p><ul><li>European data privacy regulations (<em>GDPR</em>)</li><li>International team collaboration</li><li>German business culture</li></ul><p>Would love to return for future projects! 🇩🇪</p>',
-        createdBy: 'Admin',
-        createdAt: '2024-01-05T11:45:00Z',
-        modifiedBy: 'Admin',
-        modifiedAt: '2024-01-05T11:45:00Z',
+      },
+      {
+        id: '0j1k2l',
+        type: 'Collaboration',
+        details: [
+          { key: 'project', value: 'AI Development' },
+          { key: 'funding', value: '2M USD' },
+        ],
+        remarks: 'Joint AI research project.',
+        entity1Alias: 'Theta Labs',
+        entity2Alias: 'Lambda AI',
+        startDate: '01/01/2025',
+        endDate: '31/12/2027',
+        createdDate: '10/11/2024',
+        createdBy: 'projectLead',
+        lastUpdatedDate: '05/05/2025',
+        lastUpdatedBy: 'projectLead',
+        entity1: {
+          id: 'E1-300',
+          idNumber: 'T12378',
+          type: 'book',
+          name: 'Theta Encyclopedia',
+        },
+        entity2: {
+          id: 'E2-400',
+          idNumber: 'L87654',
+          type: 'abbreviation',
+          name: 'LAI',
+        },
+      },
+      {
+        id: '3m4n5o',
+        type: 'Acquisition',
+        details: [
+          { key: 'purchasePrice', value: '150M USD' },
+          { key: 'sharesTransferred', value: '100%' },
+        ],
+        remarks: 'Acquisition of Epsilon Ventures.',
+        entity1Alias: 'Zeta Holdings',
+        entity2Alias: 'Epsilon Ventures',
+        startDate: '01/09/2021',
+        endDate: '01/09/2022',
+        createdDate: '15/07/2021',
+        createdBy: 'ceoZeta',
+        lastUpdatedDate: '30/08/2022',
+        lastUpdatedBy: 'financeTeam',
+        entity1: {
+          id: 'E1-500',
+          idNumber: 'Z45678',
+          type: 'country',
+          name: 'Zeta Country',
+        },
+        entity2: {
+          id: 'E2-600',
+          idNumber: 'E11223',
+          type: 'map',
+          name: 'Epsilon Region Map',
+        },
       },
     ],
   };
@@ -448,8 +423,8 @@ export function PersonProfile() {
   const sections = useMemo(
     () => [
       {
-        id: 'professional-details',
-        label: 'Professional Details',
+        id: 'historical-records',
+        label: 'Historical Records',
         icon: IconBriefcase,
       },
       {
@@ -476,6 +451,11 @@ export function PersonProfile() {
         id: 'personal-bio',
         label: 'Personal Bio',
         icon: IconUser,
+      },
+      {
+        id: 'attachment',
+        label: 'Attachments',
+        icon: IconFolder,
       },
     ],
     []
@@ -630,369 +610,13 @@ export function PersonProfile() {
     setIsCreateMode(false);
   };
 
-  // Professional details handlers
-  const handleEditProfessionalDetail = (
-    detail: PersonData['professionalDetails'][0]
-  ) => {
-    setEditingProfessionalDetail(detail);
-    setProfessionalDetailForm({
-      type: detail.type,
-      title: detail.title,
-      company: detail.company,
-      startDate: detail.startDate,
-      endDate: detail.endDate,
-      description: detail.description,
-    });
-    setIsCreateProfessionalMode(false);
-    setProfessionalDetailModalOpen(true);
-  };
-
-  const handleCreateProfessionalDetail = () => {
-    setEditingProfessionalDetail(null);
-    setProfessionalDetailForm({
-      type: '',
-      title: '',
-      company: '',
-      startDate: '',
-      endDate: '',
-      description: '',
-    });
-    setIsCreateProfessionalMode(true);
-    setProfessionalDetailModalOpen(true);
-  };
-
-  const handleSaveProfessionalDetail = () => {
-    if (isCreateProfessionalMode) {
-      console.log('Creating new professional detail:', professionalDetailForm);
-    } else if (editingProfessionalDetail) {
-      console.log(
-        `Saving edit for professional detail ${editingProfessionalDetail.id}:`,
-        professionalDetailForm
-      );
-    }
-
-    setProfessionalDetailModalOpen(false);
-    setEditingProfessionalDetail(null);
-    setProfessionalDetailForm({
-      type: '',
-      title: '',
-      company: '',
-      startDate: '',
-      endDate: '',
-      description: '',
-    });
-    setIsCreateProfessionalMode(false);
-  };
-
-  const handleCancelProfessionalDetail = () => {
-    setProfessionalDetailModalOpen(false);
-    setEditingProfessionalDetail(null);
-    setProfessionalDetailForm({
-      type: '',
-      title: '',
-      company: '',
-      startDate: '',
-      endDate: '',
-      description: '',
-    });
-    setIsCreateProfessionalMode(false);
-  };
-
-  const toggleDetailExpansion = (detailId: string) => {
-    setExpandedDetails((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(detailId)) {
-        newSet.delete(detailId);
-      } else {
-        newSet.add(detailId);
-      }
-      return newSet;
-    });
-  };
-
-  // Linkage handlers
-  const handleEditLinkage = (linkage: LinkageData) => {
-    setEditingLinkage(linkage);
-    setLinkageForm({
-      fromProfile: {
-        profileId: linkage.fromProfile.profileId,
-        profileType: linkage.fromProfile.profileType,
-        profileName: linkage.fromProfile.profileName,
-      },
-      toProfile: {
-        profileId: linkage.toProfile.profileId,
-        profileType: linkage.toProfile.profileType,
-        profileName: linkage.toProfile.profileName,
-      },
-      linkageType: linkage.linkageType,
-      remarks: linkage.remarks,
-    });
-
-    // Set the editor content
-    if (editor) {
-      editor.commands.setContent(linkage.remarks);
-    }
-
-    setIsCreateLinkageMode(false);
-    setLinkageModalOpen(true);
-  };
-
-  const handleCreateLinkage = () => {
-    setEditingLinkage(null);
-    setLinkageForm({
-      fromProfile: {
-        profileId: personData.id,
-        profileType: 'person',
-        profileName: personData.name,
-      },
-      toProfile: {
-        profileId: '',
-        profileType: '',
-        profileName: '',
-      },
-      linkageType: '',
-      remarks: '',
-    });
-
-    // Clear the editor content
-    if (editor) {
-      editor.commands.setContent('');
-    }
-
-    setIsCreateLinkageMode(true);
-    setLinkageModalOpen(true);
-  };
-
-  const handleCancelLinkage = () => {
-    setLinkageModalOpen(false);
-    setEditingLinkage(null);
-    setLinkageForm({
-      fromProfile: {
-        profileId: '',
-        profileType: '',
-        profileName: '',
-      },
-      toProfile: {
-        profileId: '',
-        profileType: '',
-        profileName: '',
-      },
-      linkageType: '',
-      remarks: '',
-    });
-
-    // Clear the editor content
-    if (editor) {
-      editor.commands.setContent('');
-    }
-
-    setIsCreateLinkageMode(false);
-  };
-
-  const handleSaveLinkage = () => {
-    if (isCreateLinkageMode) {
-      console.log('Creating new linkage:', linkageForm);
-    } else if (editingLinkage) {
-      console.log(`Saving edit for linkage ${editingLinkage.id}:`, linkageForm);
-    }
-
-    setLinkageModalOpen(false);
-    setEditingLinkage(null);
-    setLinkageForm({
-      fromProfile: {
-        profileId: '',
-        profileType: '',
-        profileName: '',
-      },
-      toProfile: {
-        profileId: '',
-        profileType: '',
-        profileName: '',
-      },
-      linkageType: '',
-      remarks: '',
-    });
-    setIsCreateLinkageMode(false);
-  };
-
-  const getProfileTypeColor = (
-    type:
-      | LinkageData['fromProfile']['profileType']
-      | LinkageData['toProfile']['profileType']
-  ) => {
-    const colors = {
-      person: 'blue',
-      map: 'green',
-      book: 'orange',
-      country: 'red',
-      abbreviations: 'purple',
-    };
-    return colors[type] || 'gray';
-  };
-
-  const renderProfessionalDetails = () => (
-    <Card
-      shadow="sm"
-      padding="lg"
-      radius="md"
-      withBorder
-      id="professional-details"
+  const renderHistoricalRecords = () => (
+    <HistoricalRecordsSegment
       ref={(el) => {
-        sectionRefs.current['professional-details'] = el;
+        sectionRefs.current['historical-records'] = el;
       }}
-      mb="xl"
-    >
-      <Stack gap="md">
-        <Group justify="space-between">
-          <Title order={3}>Professional Details</Title>
-          <Button
-            leftSection={<IconPlus size="1rem" />}
-            variant="outline"
-            size="sm"
-            onClick={handleCreateProfessionalDetail}
-          >
-            Add Professional Detail
-          </Button>
-        </Group>
-
-        <Group gap="xs">
-          <Text fw={500} style={{ minWidth: '60px' }}>
-            Current Position:
-          </Text>
-          <Text>{personData.position}</Text>
-        </Group>
-
-        <Group gap="xs">
-          <Text fw={500} style={{ minWidth: '60px' }}>
-            Company:
-          </Text>
-          <Text>{personData.company}</Text>
-        </Group>
-
-        <Group gap="xs">
-          <Text fw={500} style={{ minWidth: '60px' }}>
-            Department:
-          </Text>
-          <Text>{personData.department}</Text>
-        </Group>
-
-        <Group gap="xs">
-          <Text fw={500} style={{ minWidth: '60px' }}>
-            Join Date:
-          </Text>
-          <Text>{personData.joinDate}</Text>
-        </Group>
-
-        <Table striped highlightOnHover>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Type</Table.Th>
-              <Table.Th>Title</Table.Th>
-              <Table.Th>Company/Institution</Table.Th>
-              <Table.Th>Start Date</Table.Th>
-              <Table.Th>End Date</Table.Th>
-              <Table.Th>Modified By</Table.Th>
-              <Table.Th>Actions</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {personData.professionalDetails.map((detail) => (
-              <>
-                <Table.Tr key={detail.id}>
-                  <Table.Td>
-                    <Badge color="blue" variant="light">
-                      {detail.type}
-                    </Badge>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text fw={500} style={{ minWidth: '60px' }}>
-                      {detail.title}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>{detail.company}</Table.Td>
-                  <Table.Td>
-                    {new Date(detail.startDate).toLocaleDateString()}
-                  </Table.Td>
-                  <Table.Td>
-                    {detail.endDate === 'Present' ? (
-                      <Badge color="green" variant="light">
-                        Present
-                      </Badge>
-                    ) : (
-                      new Date(detail.endDate).toLocaleDateString()
-                    )}
-                  </Table.Td>
-                  <Table.Td>
-                    <Text size="sm" c="dimmed">
-                      {detail.modifiedBy}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap="xs">
-                      <ActionIcon
-                        variant="subtle"
-                        color="blue"
-                        onClick={() => toggleDetailExpansion(detail.id)}
-                        aria-label={
-                          expandedDetails.has(detail.id)
-                            ? 'Collapse description'
-                            : 'Expand description'
-                        }
-                      >
-                        {expandedDetails.has(detail.id) ? (
-                          <IconMinus size="1rem" />
-                        ) : (
-                          <IconPlus size="1rem" />
-                        )}
-                      </ActionIcon>
-                      <Menu position="bottom-end" shadow="md">
-                        <Menu.Target>
-                          <ActionIcon variant="subtle" color="gray">
-                            <IconDotsVertical size="1rem" />
-                          </ActionIcon>
-                        </Menu.Target>
-                        <Menu.Dropdown>
-                          <Menu.Item
-                            leftSection={
-                              <IconInfoCircle size="1rem" color="gray" />
-                            }
-                            disabled
-                          >
-                            {`Modified by ${detail.modifiedBy} on ${new Date(detail.modifiedAt).toLocaleDateString()}`}
-                          </Menu.Item>
-                          <Menu.Item
-                            leftSection={<IconEdit size="1rem" color="blue" />}
-                            onClick={() => handleEditProfessionalDetail(detail)}
-                          >
-                            Edit
-                          </Menu.Item>
-                          <Menu.Item
-                            leftSection={<IconTrash size="1rem" color="red" />}
-                            onClick={() => console.log('Delete', detail.id)}
-                            color="red"
-                          >
-                            Delete
-                          </Menu.Item>
-                        </Menu.Dropdown>
-                      </Menu>
-                    </Group>
-                  </Table.Td>
-                </Table.Tr>
-                {expandedDetails.has(detail.id) && (
-                  <Table.Tr key={`${detail.id}-description`}>
-                    <Table.Td colSpan={7}>
-                      <Box p="sm" bg="gray.0">
-                        <Text size="sm">{detail.description}</Text>
-                      </Box>
-                    </Table.Td>
-                  </Table.Tr>
-                )}
-              </>
-            ))}
-          </Table.Tbody>
-        </Table>
-      </Stack>
-    </Card>
+      historicalRecords={personData.historicalRecords}
+    />
   );
 
   const renderSkills = () => (
@@ -1271,199 +895,20 @@ export function PersonProfile() {
   );
 
   const renderLinkages = () => (
-    <Card
-      shadow="sm"
-      padding="lg"
-      radius="md"
-      withBorder
-      id="linkages"
+    <LinkageSegment
       ref={(el) => {
         sectionRefs.current['linkages'] = el;
       }}
-      mb="xl"
-    >
-      <Stack gap="md">
-        <Group justify="space-between">
-          <Title order={3}>Linkages</Title>
-          <Button
-            leftSection={<IconPlus size="1rem" />}
-            variant="outline"
-            size="sm"
-            onClick={handleCreateLinkage}
-          >
-            Add Linkage
-          </Button>
-        </Group>
+      linkages={personData.linkages}
+    />
+  );
 
-        <Text c="dimmed" mb="md">
-          Connections to other profiles, resources, and entities that provide
-          context and relationships.
-        </Text>
-
-        <Table striped highlightOnHover>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>From Profile</Table.Th>
-              <Table.Th>To Profile</Table.Th>
-              <Table.Th>Linkage Type</Table.Th>
-              <Table.Th>Created By</Table.Th>
-              <Table.Th>Modified By</Table.Th>
-              <Table.Th>Actions</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {personData.linkages.map((linkage) => (
-              <>
-                <Table.Tr key={linkage.id}>
-                  <Table.Td>
-                    <Stack gap="xs">
-                      <Group gap="xs">
-                        <Badge
-                          color={getProfileTypeColor(
-                            linkage.fromProfile.profileType
-                          )}
-                          variant="light"
-                          size="sm"
-                        >
-                          {linkage.fromProfile.profileType}
-                        </Badge>
-                        <Text fw={500} size="sm">
-                          {linkage.fromProfile.profileName}
-                        </Text>
-                      </Group>
-                      <Text
-                        size="xs"
-                        c="dimmed"
-                        style={{ fontFamily: 'monospace' }}
-                      >
-                        {linkage.fromProfile.profileId}
-                      </Text>
-                    </Stack>
-                  </Table.Td>
-                  <Table.Td>
-                    <Stack gap="xs">
-                      <Group gap="xs">
-                        <Badge
-                          color={getProfileTypeColor(
-                            linkage.toProfile.profileType
-                          )}
-                          variant="light"
-                          size="sm"
-                        >
-                          {linkage.toProfile.profileType}
-                        </Badge>
-                        <Text fw={500} size="sm">
-                          {linkage.toProfile.profileName}
-                        </Text>
-                      </Group>
-                      <Text
-                        size="xs"
-                        c="dimmed"
-                        style={{ fontFamily: 'monospace' }}
-                      >
-                        {linkage.toProfile.profileId}
-                      </Text>
-                    </Stack>
-                  </Table.Td>
-                  <Table.Td>{linkage.linkageType}</Table.Td>
-                  <Table.Td>
-                    <Text size="sm" c="dimmed">
-                      {linkage.createdBy}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text size="sm" c="dimmed">
-                      {linkage.modifiedBy}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap="xs">
-                      <ActionIcon
-                        variant="subtle"
-                        color="blue"
-                        onClick={() => toggleDetailExpansion(linkage.id)}
-                        aria-label={
-                          expandedDetails.has(linkage.id)
-                            ? 'Collapse remarks'
-                            : 'Expand remarks'
-                        }
-                      >
-                        {expandedDetails.has(linkage.id) ? (
-                          <IconMinus size="1rem" />
-                        ) : (
-                          <IconPlus size="1rem" />
-                        )}
-                      </ActionIcon>
-                      <Menu position="bottom-end" shadow="md">
-                        <Menu.Target>
-                          <ActionIcon variant="subtle" color="gray">
-                            <IconDotsVertical size="1rem" />
-                          </ActionIcon>
-                        </Menu.Target>
-                        <Menu.Dropdown>
-                          <Menu.Item
-                            leftSection={
-                              <IconInfoCircle size="1rem" color="gray" />
-                            }
-                            disabled
-                          >
-                            {`Created by ${linkage.createdBy} on ${new Date(linkage.createdAt).toLocaleDateString()}`}
-                          </Menu.Item>
-                          <Menu.Item
-                            leftSection={
-                              <IconInfoCircle size="1rem" color="gray" />
-                            }
-                            disabled
-                          >
-                            {`Modified by ${linkage.modifiedBy} on ${new Date(linkage.modifiedAt).toLocaleDateString()}`}
-                          </Menu.Item>
-                          <Menu.Item
-                            leftSection={<IconEdit size="1rem" color="blue" />}
-                            onClick={() => handleEditLinkage(linkage)}
-                          >
-                            Edit
-                          </Menu.Item>
-                          <Menu.Item
-                            leftSection={<IconTrash size="1rem" color="red" />}
-                            onClick={() => console.log('Delete', linkage.id)}
-                            color="red"
-                          >
-                            Delete
-                          </Menu.Item>
-                        </Menu.Dropdown>
-                      </Menu>
-                    </Group>
-                  </Table.Td>
-                </Table.Tr>
-                {expandedDetails.has(linkage.id) && (
-                  <Table.Tr key={`${linkage.id}-remarks`}>
-                    <Table.Td colSpan={6}>
-                      <Box p="sm" bg="gray.0">
-                        <Text size="sm" fw={500} mb="xs">
-                          Remarks:
-                        </Text>
-                        <Box
-                          style={{
-                            fontSize: '14px',
-                            lineHeight: 1.5,
-                          }}
-                          dangerouslySetInnerHTML={{ __html: linkage.remarks }}
-                        />
-                      </Box>
-                    </Table.Td>
-                  </Table.Tr>
-                )}
-              </>
-            ))}
-          </Table.Tbody>
-        </Table>
-
-        <Text mt="md" size="sm" c="dimmed">
-          These linkages help establish connections and provide context for
-          professional and personal relationships.
-        </Text>
-      </Stack>
-    </Card>
+  const renderAttachments = () => (
+    <AttachmentSegment
+      ref={(el) => {
+        sectionRefs.current['attachment'] = el;
+      }}
+    />
   );
 
   return (
@@ -1535,12 +980,13 @@ export function PersonProfile() {
           {/* Main Content - Scrollable */}
           <Box style={{ gridColumn: 'span 4' }}>
             <Stack gap={0}>
-              {renderProfessionalDetails()}
+              {renderHistoricalRecords()}
               {renderSkills()}
               {renderAddress()}
               {renderLinkages()}
               {renderFunFacts()}
               {renderPersonalBio()}
+              {renderAttachments()}
             </Stack>
           </Box>
         </SimpleGrid>
@@ -1581,399 +1027,6 @@ export function PersonProfile() {
             </Button>
             <Button onClick={handleSaveEdit} disabled={!editText.trim()}>
               {isCreateMode ? 'Create' : 'Save Changes'}
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
-
-      {/* Edit/Create Professional Detail Modal */}
-      <Modal
-        opened={professionalDetailModalOpen}
-        onClose={handleCancelProfessionalDetail}
-        title={
-          isCreateProfessionalMode
-            ? 'Create Professional Detail'
-            : 'Edit Professional Detail'
-        }
-        centered
-        size="lg"
-      >
-        <Stack gap="md">
-          <Select
-            label="Type"
-            placeholder="Select type..."
-            value={professionalDetailForm.type}
-            onChange={(value) =>
-              setProfessionalDetailForm((prev) => ({
-                ...prev,
-                type: value || '',
-              }))
-            }
-            data={[
-              { value: 'Work Experience', label: 'Work Experience' },
-              { value: 'Education', label: 'Education' },
-              { value: 'Certification', label: 'Certification' },
-              { value: 'Training', label: 'Training' },
-              { value: 'Volunteer Work', label: 'Volunteer Work' },
-            ]}
-            required
-          />
-
-          <TextInput
-            label="Title"
-            placeholder="Enter title..."
-            value={professionalDetailForm.title}
-            onChange={(e) =>
-              setProfessionalDetailForm((prev) => ({
-                ...prev,
-                title: e.target.value,
-              }))
-            }
-            required
-          />
-
-          <TextInput
-            label="Company/Institution"
-            placeholder="Enter company or institution..."
-            value={professionalDetailForm.company}
-            onChange={(e) =>
-              setProfessionalDetailForm((prev) => ({
-                ...prev,
-                company: e.target.value,
-              }))
-            }
-            required
-          />
-
-          <Group grow>
-            <TextInput
-              label="Start Date"
-              placeholder="YYYY-MM-DD"
-              value={professionalDetailForm.startDate}
-              onChange={(e) =>
-                setProfessionalDetailForm((prev) => ({
-                  ...prev,
-                  startDate: e.target.value,
-                }))
-              }
-              required
-            />
-            <TextInput
-              label="End Date"
-              placeholder="YYYY-MM-DD or 'Present'"
-              value={professionalDetailForm.endDate}
-              onChange={(e) =>
-                setProfessionalDetailForm((prev) => ({
-                  ...prev,
-                  endDate: e.target.value,
-                }))
-              }
-              required
-            />
-          </Group>
-
-          <Textarea
-            label="Description"
-            placeholder="Enter description..."
-            value={professionalDetailForm.description}
-            onChange={(e) =>
-              setProfessionalDetailForm((prev) => ({
-                ...prev,
-                description: e.target.value,
-              }))
-            }
-            rows={4}
-            required
-          />
-
-          {editingProfessionalDetail && !isCreateProfessionalMode && (
-            <Stack gap="xs">
-              <Text size="sm" c="dimmed">
-                <strong>Last modified:</strong>{' '}
-                {new Date(
-                  editingProfessionalDetail.modifiedAt
-                ).toLocaleDateString()}
-              </Text>
-              <Text size="sm" c="dimmed">
-                <strong>Modified by:</strong>{' '}
-                {editingProfessionalDetail.modifiedBy}
-              </Text>
-            </Stack>
-          )}
-
-          <Group justify="flex-end" gap="sm">
-            <Button variant="outline" onClick={handleCancelProfessionalDetail}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSaveProfessionalDetail}
-              disabled={
-                !professionalDetailForm.type ||
-                !professionalDetailForm.title ||
-                !professionalDetailForm.company
-              }
-            >
-              {isCreateProfessionalMode ? 'Create' : 'Save Changes'}
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
-
-      {/* Edit/Create Linkage Modal */}
-      {/* Edit/Create Linkage Modal */}
-      <Modal
-        opened={linkageModalOpen}
-        onClose={handleCancelLinkage}
-        title={isCreateLinkageMode ? 'Create Linkage' : 'Edit Linkage'}
-        centered
-        size="xl"
-      >
-        <Stack gap="md">
-          <SimpleGrid cols={2} spacing="lg">
-            {/* Left Column - From Profile */}
-            <Stack gap="md">
-              <Title order={4} c="blue">
-                Link From Profile
-              </Title>
-
-              <Select
-                label="Profile Type"
-                placeholder="Select profile type..."
-                value={linkageForm.fromProfile.profileType}
-                onChange={(value) =>
-                  setLinkageForm((prev) => ({
-                    ...prev,
-                    fromProfile: {
-                      ...prev.fromProfile,
-                      profileType:
-                        (value as LinkageData['fromProfile']['profileType']) ||
-                        '',
-                    },
-                  }))
-                }
-                data={[
-                  { value: 'person', label: 'Person' },
-                  { value: 'map', label: 'Map' },
-                  { value: 'book', label: 'Book' },
-                  { value: 'country', label: 'Country' },
-                  { value: 'abbreviations', label: 'Abbreviations' },
-                ]}
-                required
-              />
-
-              <TextInput
-                label="Profile ID"
-                placeholder="Enter profile ID..."
-                value={linkageForm.fromProfile.profileId}
-                onChange={(e) =>
-                  setLinkageForm((prev) => ({
-                    ...prev,
-                    fromProfile: {
-                      ...prev.fromProfile,
-                      profileId: e.target.value,
-                    },
-                  }))
-                }
-                required
-              />
-
-              <TextInput
-                label="Profile Name"
-                placeholder="Enter profile name..."
-                value={linkageForm.fromProfile.profileName}
-                onChange={(e) =>
-                  setLinkageForm((prev) => ({
-                    ...prev,
-                    fromProfile: {
-                      ...prev.fromProfile,
-                      profileName: e.target.value,
-                    },
-                  }))
-                }
-                required
-              />
-            </Stack>
-
-            {/* Right Column - To Profile */}
-            <Stack gap="md">
-              <Title order={4} c="green">
-                Link To Profile
-              </Title>
-
-              <Select
-                label="Profile Type"
-                placeholder="Select profile type..."
-                value={linkageForm.toProfile.profileType}
-                onChange={(value) =>
-                  setLinkageForm((prev) => ({
-                    ...prev,
-                    toProfile: {
-                      ...prev.toProfile,
-                      profileType:
-                        (value as LinkageData['toProfile']['profileType']) ||
-                        '',
-                    },
-                  }))
-                }
-                data={[
-                  { value: 'person', label: 'Person' },
-                  { value: 'map', label: 'Map' },
-                  { value: 'book', label: 'Book' },
-                  { value: 'country', label: 'Country' },
-                  { value: 'abbreviations', label: 'Abbreviations' },
-                ]}
-                required
-              />
-
-              <TextInput
-                label="Profile ID"
-                placeholder="Enter profile ID..."
-                value={linkageForm.toProfile.profileId}
-                onChange={(e) =>
-                  setLinkageForm((prev) => ({
-                    ...prev,
-                    toProfile: {
-                      ...prev.toProfile,
-                      profileId: e.target.value,
-                    },
-                  }))
-                }
-                required
-              />
-
-              <TextInput
-                label="Profile Name"
-                placeholder="Enter profile name..."
-                value={linkageForm.toProfile.profileName}
-                onChange={(e) =>
-                  setLinkageForm((prev) => ({
-                    ...prev,
-                    toProfile: {
-                      ...prev.toProfile,
-                      profileName: e.target.value,
-                    },
-                  }))
-                }
-                required
-              />
-            </Stack>
-          </SimpleGrid>
-
-          {/* Linkage Details - Full Width */}
-          <Stack gap="md">
-            <Title order={4} c="orange">
-              Linkage Details
-            </Title>
-
-            <TextInput
-              label="Linkage Type"
-              placeholder="Enter linkage type (e.g., Colleague, Reference, etc.)..."
-              value={linkageForm.linkageType}
-              onChange={(e) =>
-                setLinkageForm((prev) => ({
-                  ...prev,
-                  linkageType: e.target.value,
-                }))
-              }
-              required
-            />
-
-            {/* Rich Text Editor for Remarks */}
-            <Stack gap="xs">
-              <Text size="sm" fw={500}>
-                Remarks{' '}
-                <Text component="span" c="red">
-                  *
-                </Text>
-              </Text>
-              <RichTextEditor editor={editor}>
-                <RichTextEditor.Toolbar sticky stickyOffset={60}>
-                  <RichTextEditor.ControlsGroup>
-                    <RichTextEditor.Bold />
-                    <RichTextEditor.Italic />
-                    <RichTextEditor.Underline />
-                    <RichTextEditor.Strikethrough />
-                    <RichTextEditor.ClearFormatting />
-                    <RichTextEditor.Highlight />
-                    <RichTextEditor.Code />
-                  </RichTextEditor.ControlsGroup>
-
-                  <RichTextEditor.ControlsGroup>
-                    <RichTextEditor.H1 />
-                    <RichTextEditor.H2 />
-                    <RichTextEditor.H3 />
-                    <RichTextEditor.H4 />
-                  </RichTextEditor.ControlsGroup>
-
-                  <RichTextEditor.ControlsGroup>
-                    <RichTextEditor.Blockquote />
-                    <RichTextEditor.Hr />
-                    <RichTextEditor.BulletList />
-                    <RichTextEditor.OrderedList />
-                    <RichTextEditor.Subscript />
-                    <RichTextEditor.Superscript />
-                  </RichTextEditor.ControlsGroup>
-
-                  <RichTextEditor.ControlsGroup>
-                    <RichTextEditor.Link />
-                    <RichTextEditor.Unlink />
-                  </RichTextEditor.ControlsGroup>
-
-                  <RichTextEditor.ControlsGroup>
-                    <RichTextEditor.AlignLeft />
-                    <RichTextEditor.AlignCenter />
-                    <RichTextEditor.AlignJustify />
-                    <RichTextEditor.AlignRight />
-                  </RichTextEditor.ControlsGroup>
-
-                  <RichTextEditor.ControlsGroup>
-                    <RichTextEditor.Undo />
-                    <RichTextEditor.Redo />
-                  </RichTextEditor.ControlsGroup>
-                </RichTextEditor.Toolbar>
-
-                <RichTextEditor.Content style={{ minHeight: '200px' }} />
-              </RichTextEditor>
-              <Text size="xs" c="dimmed">
-                Use the rich text editor to format your remarks with bold,
-                italic, lists, links, and more.
-              </Text>
-            </Stack>
-          </Stack>
-
-          {editingLinkage && !isCreateLinkageMode && (
-            <Stack gap="xs">
-              <Text size="sm" c="dimmed">
-                <strong>Created:</strong>{' '}
-                {new Date(editingLinkage.createdAt).toLocaleDateString()} by{' '}
-                {editingLinkage.createdBy}
-              </Text>
-              <Text size="sm" c="dimmed">
-                <strong>Last modified:</strong>{' '}
-                {new Date(editingLinkage.modifiedAt).toLocaleDateString()} by{' '}
-                {editingLinkage.modifiedBy}
-              </Text>
-            </Stack>
-          )}
-
-          <Group justify="flex-end" gap="sm">
-            <Button variant="outline" onClick={handleCancelLinkage}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSaveLinkage}
-              disabled={
-                !linkageForm.fromProfile.profileType ||
-                !linkageForm.fromProfile.profileId ||
-                !linkageForm.fromProfile.profileName ||
-                !linkageForm.toProfile.profileType ||
-                !linkageForm.toProfile.profileId ||
-                !linkageForm.toProfile.profileName ||
-                !linkageForm.linkageType ||
-                !linkageForm.remarks.trim()
-              }
-            >
-              {isCreateLinkageMode ? 'Create' : 'Save Changes'}
             </Button>
           </Group>
         </Stack>

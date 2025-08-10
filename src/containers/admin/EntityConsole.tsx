@@ -4,13 +4,11 @@ import {
   Box,
   Button,
   Card,
-  Checkbox,
   Container,
   Divider,
   Group,
   Modal,
   Stack,
-  Table,
   Tabs,
   Text,
   TextInput,
@@ -25,8 +23,10 @@ import {
   IconSettings,
   IconTrash,
 } from '@tabler/icons-react';
+import { AgGridReact } from 'ag-grid-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { agGridTheme } from '../../App';
 
 // Mock interface for entity data
 interface EntitySection {
@@ -442,50 +442,73 @@ export function EntityConsole() {
                       </Group>
                     </Group>
 
-                    <Table striped highlightOnHover>
-                      <Table.Thead>
-                        <Table.Tr>
-                          <Table.Th style={{ width: 40 }}>
-                            <Checkbox
-                              checked={areAllSectionsSelected()}
-                              onChange={selectAllSections}
-                              aria-label="Select all sections"
-                            />
-                          </Table.Th>
-                          <Table.Th>Name</Table.Th>
-                          <Table.Th>Type</Table.Th>
-                          <Table.Th>Status</Table.Th>
-                          <Table.Th>Last Modified</Table.Th>
-                          <Table.Th>Modified By</Table.Th>
-                        </Table.Tr>
-                      </Table.Thead>
-                      <Table.Tbody>
-                        {entity.sections.map((section) => (
-                          <Table.Tr key={section.id}>
-                            <Table.Td>
-                              <Checkbox
-                                checked={selectedSections.includes(section.id)}
-                                onChange={() =>
-                                  toggleSectionSelection(section.id)
-                                }
-                                aria-label={`Select section ${section.name}`}
-                              />
-                            </Table.Td>
-                            <Table.Td>{section.name}</Table.Td>
-                            <Table.Td>{section.type}</Table.Td>
-                            <Table.Td>
-                              <Badge color={section.indexed ? 'green' : 'gray'}>
-                                {section.indexed ? 'Indexed' : 'Not Indexed'}
+                    <div style={{ height: 400, width: '100%' }}>
+                      <AgGridReact
+                        theme={agGridTheme}
+                        columnDefs={[
+                          {
+                            field: 'name',
+                            headerName: 'Name',
+                            filter: 'agTextColumnFilter',
+                            sortable: true,
+                          },
+                          {
+                            field: 'type',
+                            headerName: 'Type',
+                            filter: 'agTextColumnFilter',
+                            sortable: true,
+                          },
+                          {
+                            field: 'status',
+                            headerName: 'Status',
+                            filter: 'agSetColumnFilter',
+                            sortable: true,
+                            cellRenderer: (params) => (
+                              <Badge
+                                color={params.data.indexed ? 'green' : 'gray'}
+                              >
+                                {params.data.indexed
+                                  ? 'Indexed'
+                                  : 'Not Indexed'}
                               </Badge>
-                            </Table.Td>
-                            <Table.Td>
-                              {formatDate(section.lastModified)}
-                            </Table.Td>
-                            <Table.Td>{section.modifiedBy}</Table.Td>
-                          </Table.Tr>
-                        ))}
-                      </Table.Tbody>
-                    </Table>
+                            ),
+                          },
+                          {
+                            field: 'lastModified',
+                            headerName: 'Last Modified',
+                            filter: 'agDateColumnFilter',
+                            sortable: true,
+                            cellRenderer: (params) => formatDate(params.value),
+                          },
+                          {
+                            field: 'modifiedBy',
+                            headerName: 'Modified By',
+                            filter: 'agTextColumnFilter',
+                            sortable: true,
+                          },
+                        ]}
+                        rowData={entity.sections}
+                        defaultColDef={{
+                          flex: 1,
+                          minWidth: 100,
+                          resizable: true,
+                        }}
+                        rowSelection={{
+                          enableClickSelection: true,
+                          checkboxes: true,
+                          mode: 'multiRow',
+                        }}
+                        onSelectionChanged={(event) => {
+                          const selectedNodes = event.api.getSelectedNodes();
+                          const selectedIds = selectedNodes.map(
+                            (node) => node.data.id
+                          );
+                          setSelectedSections(selectedIds);
+                        }}
+                        pagination={true}
+                        paginationPageSize={20}
+                      />
+                    </div>
                   </Stack>
                 </Tabs.Panel>
               </Tabs>
